@@ -1,12 +1,10 @@
 // User Management JavaScript for CalyBase
 console.log('🔧 User Management: Loading module...');
 
-// Simple initialization guard
-if (window.userManagementInitialized) {
-    console.log('🛑 User Management: Already initialized, skipping');
-    return;
-}
-window.userManagementInitialized = true;
+// Simple initialization guard  
+if (!window.userManagementInitialized) {
+    window.userManagementInitialized = true;
+    console.log('🔧 User Management: Initializing for the first time...');
 
 // User management data store
 let userManagementData = {
@@ -797,3 +795,7 @@ window.deleteUser = async function(uid, email) {
         alert(`❌ Erreur lors de la suppression: ${error.message}`);
     }
 };
+
+} else {
+    console.log('🛑 User Management: Already initialized, skipping');
+}
