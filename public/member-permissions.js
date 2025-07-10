@@ -12,27 +12,44 @@ class MemberPermissions {
     // Initialize the permissions checker
     async initialize() {
         try {
+            console.log('🔧 Initializing member permissions...');
+            
             // Wait for authentication
             await this.waitForAuth();
             
             // Get current user
             this.currentUser = window.auth?.currentUser;
+            console.log('👤 Current user:', this.currentUser?.email || 'No user');
+            console.log('👤 User UID:', this.currentUser?.uid || 'No UID');
+            
             if (!this.currentUser) {
                 throw new Error('Aucun utilisateur authentifié');
             }
 
             // Get user role from Firestore
+            console.log('🗄️ Fetching user document from Firestore...');
             const userDoc = await window.db.collection('users').doc(this.currentUser.uid).get();
+            console.log('🗄️ User document exists:', userDoc.exists);
+            
             if (!userDoc.exists) {
+                console.error('❌ User document does not exist for UID:', this.currentUser.uid);
                 throw new Error('Document utilisateur non trouvé');
             }
 
             const userData = userDoc.data();
+            console.log('🗄️ User data from Firestore:', userData);
+            
             this.userRole = userData.role;
+            console.log('👑 User role assigned:', this.userRole);
 
             // Get system configuration
+            console.log('⚙️ Getting system configuration...');
             if (window.systemConfig) {
                 this.systemConfig = window.systemConfig.getConfig();
+                console.log('⚙️ System config loaded:', !!this.systemConfig);
+                console.log('⚙️ Available roles in config:', Object.keys(this.systemConfig?.permissions || {}));
+            } else {
+                console.warn('⚠️ window.systemConfig not available');
             }
 
             this.initialized = true;
@@ -40,6 +57,7 @@ class MemberPermissions {
             
         } catch (error) {
             console.error('❌ Failed to initialize member permissions:', error);
+            console.error('❌ Error stack:', error.stack);
             throw error;
         }
     }
@@ -71,13 +89,21 @@ class MemberPermissions {
             return false;
         }
 
+        console.log(`🔍 Checking permission '${permission}' for role '${this.userRole}'`);
+        console.log('🔍 System config available:', !!this.systemConfig);
+        
         // Check role-based permissions from system config
         const rolePermissions = this.systemConfig?.permissions?.[this.userRole];
+        console.log(`🔍 Role permissions for '${this.userRole}':`, rolePermissions);
         
         // If role permissions exist, use them (don't fall back to global settings)
         if (rolePermissions && rolePermissions.hasOwnProperty(permission)) {
-            return rolePermissions[permission] === true;
+            const result = rolePermissions[permission] === true;
+            console.log(`✅ Permission '${permission}' for role '${this.userRole}': ${result}`);
+            return result;
         }
+
+        console.log(`⚠️ Permission '${permission}' not found in role '${this.userRole}', checking fallbacks`);
 
         // Only fall back to global settings for system-wide permissions that aren't role-specific
         const memberManagement = this.systemConfig?.memberManagement;
@@ -98,6 +124,7 @@ class MemberPermissions {
             }
         }
 
+        console.log(`❌ Permission '${permission}' denied - no fallback available`);
         return false;
     }
 
@@ -222,6 +249,49 @@ window.canViewMemberDetails = async function() {
         await window.memberPermissions.initialize();
     }
     return window.memberPermissions.canViewMemberDetails();
+};
+
+// Debug function to check permission status
+window.debugMemberPermissions = async function() {
+    console.log('🔍 === MEMBER PERMISSIONS DEBUG ===');
+    
+    try {
+        if (!window.memberPermissions.initialized) {
+            console.log('⚠️ Permissions not initialized, initializing now...');
+            await window.memberPermissions.initialize();
+        }
+        
+        const mp = window.memberPermissions;
+        console.log('👤 Current user:', mp.currentUser?.email);
+        console.log('👑 User role:', mp.userRole);
+        console.log('⚙️ System config available:', !!mp.systemConfig);
+        
+        if (mp.systemConfig?.permissions) {
+            console.log('📋 Available roles:', Object.keys(mp.systemConfig.permissions));
+            console.log(`🔑 Permissions for role '${mp.userRole}':`, mp.systemConfig.permissions[mp.userRole]);
+        }
+        
+        // Test all member permissions
+        const permissions = [
+            'canViewMemberDetails',
+            'canModifyMembers',
+            'canDeleteMembers',
+            'canImportMembers',
+            'canCreateMembers',
+            'canManageMemberAvatars'
+        ];
+        
+        console.log('🧪 Testing permissions:');
+        for (const perm of permissions) {
+            const result = mp.hasPermission(perm);
+            console.log(`  ${perm}: ${result ? '✅' : '❌'}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Debug failed:', error);
+    }
+    
+    console.log('🔍 === END DEBUG ===');
 };
 
 console.log('📋 Member permissions utility loaded'); 
