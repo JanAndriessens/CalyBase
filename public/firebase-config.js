@@ -4,7 +4,9 @@
 async function loadFirebaseConfig() {
     try {
         // For production deployment, use static config
-        if (window.location.hostname.includes('calybase.web.app') || window.location.hostname.includes('calybase.firebaseapp.com')) {
+        if (window.location.hostname.includes('calybase.web.app') || 
+            window.location.hostname.includes('calybase.firebaseapp.com') ||
+            window.location.hostname.includes('caly-base.vercel.app')) {
             console.log('✅ Using production Firebase configuration');
             const config = {
                 firebase: {

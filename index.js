@@ -31,7 +31,8 @@ const corsOptions = {
             'http://localhost:3000',
             'http://localhost:3001', 
             'https://calybase.firebaseapp.com',
-            'https://calybase.web.app'
+            'https://calybase.web.app',
+            'https://caly-base.vercel.app'
         ];
         
         // Add production domain if specified in environment
