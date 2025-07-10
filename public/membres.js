@@ -589,7 +589,8 @@ async function loadMembers() {
                 <td>${member.prenom || ''}</td>
                 <td>${member.medical || ''}</td>
                 <td>
-                    <button class="action-button edit-member-btn" data-member-id="${member.id}">Modifier</button>
+                    <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3; margin-right: 5px;">Détails</button>
+                    <button class="action-button edit-member-btn" data-member-id="${member.id}" style="background: #4CAF50;">Modifier</button>
                 </td>
             `;
             membresTableBody.appendChild(row);
@@ -598,7 +599,14 @@ async function loadMembers() {
         // ⚡ PERFORMANCE: Make avatars and permissions non-blocking
         console.log('⚡ Starting non-blocking avatar and permission loading...');
         
-        // Add event listeners for edit buttons (immediate)
+        // Add event listeners for view and edit buttons (immediate)
+        document.querySelectorAll('.view-member-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const memberId = this.getAttribute('data-member-id');
+                viewMemberDetails(memberId);
+            });
+        });
+        
         document.querySelectorAll('.edit-member-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const memberId = this.getAttribute('data-member-id');
@@ -611,8 +619,8 @@ async function loadMembers() {
             console.warn('Background avatar loading failed:', error)
         );
         
-        // ⚡ Apply edit permissions in background (non-blocking)
-        applyEditMemberPermissions().catch(error => 
+        // ⚡ Apply view and edit permissions in background (non-blocking)
+        applyMemberActionPermissions().catch(error => 
             console.warn('Background permissions failed:', error)
         );
         
@@ -662,7 +670,8 @@ function filterMembers(searchTerm) {
             <td>${member.prenom || ''}</td>
             <td>${member.medical || ''}</td>
             <td>
-                <button class="action-button edit-member-btn" data-member-id="${member.id}">Modifier</button>
+                <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3; margin-right: 5px;">Détails</button>
+                <button class="action-button edit-member-btn" data-member-id="${member.id}" style="background: #4CAF50;">Modifier</button>
             </td>
         `;
         membresTableBody.appendChild(row);
@@ -671,7 +680,14 @@ function filterMembers(searchTerm) {
     // Load avatars asynchronously for filtered members
     loadMemberAvatarsAsync(filteredMembers);
     
-    // Add event listeners for edit buttons in filtered results
+    // Add event listeners for view and edit buttons in filtered results
+    document.querySelectorAll('.view-member-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const memberId = this.getAttribute('data-member-id');
+            viewMemberDetails(memberId);
+        });
+    });
+    
     document.querySelectorAll('.edit-member-btn').forEach(button => {
         button.addEventListener('click', function() {
             const memberId = this.getAttribute('data-member-id');
@@ -679,8 +695,8 @@ function filterMembers(searchTerm) {
         });
     });
     
-    // Apply edit member permissions to filtered results
-    applyEditMemberPermissions();
+    // Apply view and edit member permissions to filtered results
+    applyMemberActionPermissions();
 }
 
 async function deleteAllMembers() {
@@ -692,11 +708,16 @@ async function deleteAllMembers() {
     await batch.commit();
 }
 
-function editMember(memberId) {
-    window.location.href = `/membre-detail.html?id=${memberId}`;
+function viewMemberDetails(memberId) {
+    window.location.href = `/membre-detail.html?id=${memberId}&mode=view`;
 }
 
-// Make editMember available globally
+function editMember(memberId) {
+    window.location.href = `/membre-detail.html?id=${memberId}&mode=edit`;
+}
+
+// Make functions available globally
+window.viewMemberDetails = viewMemberDetails;
 window.editMember = editMember;
 
 // ⚡ OPTIMIZED: Batch avatar loading with reduced database queries
@@ -929,6 +950,16 @@ function disableAllMemberActions() {
     });
 }
 
+// Check permissions for view member details action
+async function canViewMember() {
+    try {
+        return await canViewMemberDetails();
+    } catch (error) {
+        console.error('Error checking view member permission:', error);
+        return false;
+    }
+}
+
 // Check permissions for edit member action
 async function canEditMember() {
     try {
@@ -939,24 +970,42 @@ async function canEditMember() {
     }
 }
 
-// ⚡ OPTIMIZED: Fast edit permissions with timeout
-async function applyEditMemberPermissions() {
+// ⚡ OPTIMIZED: Fast view and edit permissions with timeout
+async function applyMemberActionPermissions() {
     try {
-        // ⚡ Show edit buttons immediately (better UX)
+        // ⚡ Show all buttons immediately (better UX)
+        const viewButtons = document.querySelectorAll('.view-member-btn');
         const editButtons = document.querySelectorAll('.edit-member-btn');
-        editButtons.forEach(button => {
+        
+        [...viewButtons, ...editButtons].forEach(button => {
             button.style.display = '';
             button.disabled = false;
         });
 
         // ⚡ Check permissions with timeout (non-blocking)
         const permissionTimeout = 1500; // 1.5 second timeout
-        const canEdit = await Promise.race([
-            canEditMember(),
-            new Promise(resolve => setTimeout(() => resolve(true), permissionTimeout))
+        const [canView, canEdit] = await Promise.all([
+            Promise.race([
+                canViewMember(),
+                new Promise(resolve => setTimeout(() => resolve(true), permissionTimeout))
+            ]),
+            Promise.race([
+                canEditMember(),
+                new Promise(resolve => setTimeout(() => resolve(true), permissionTimeout))
+            ])
         ]);
         
+        console.log('📋 Member action permissions:', { canView, canEdit });
+        
         // ⚡ Only hide if explicitly denied
+        if (!canView) {
+            viewButtons.forEach(button => {
+                button.style.display = 'none';
+                button.disabled = true;
+            });
+            console.log('🚫 View member buttons hidden - no permission');
+        }
+        
         if (!canEdit) {
             editButtons.forEach(button => {
                 button.style.display = 'none';
@@ -966,7 +1015,7 @@ async function applyEditMemberPermissions() {
         }
         
     } catch (error) {
-        console.warn('⚠️ Edit permissions check failed, allowing editing:', error);
-        // ⚡ OPTIMIZATION: On error, allow editing (permissive fallback)
+        console.warn('⚠️ Member action permissions check failed, allowing all actions:', error);
+        // ⚡ OPTIMIZATION: On error, allow all actions (permissive fallback)
     }
 } 
