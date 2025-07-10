@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalyBase - Membres</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Application utilities -->
+    <script src="constants.js"></script>
+    <script src="device-utils.js"></script>
+    <script src="error-handler.js"></script>
+    <!-- CRITICAL: Firebase Config (MUST load first) -->
+    <script src="firebase-config.js"></script>
+    <!-- CRITICAL: Page Protection (loads after config) -->
+    <script src="page-protection.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <!-- SheetJS pour la lecture des fichiers Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- Encoding.js pour la gestion des caractères spéciaux -->
+    <script src="https://cdn.jsdelivr.net/npm/encoding-japanese@2.0.0/encoding.min.js"></script>
+    <style>
+        /* ... existing styles ... */
+
+        .member-count {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .member-count span {
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .error-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff4444;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            z-index: 9999;
+        }
+
+        /* Avatar styling for members table */
+        .avatar-cell {
+            text-align: center;
+            padding: 0.5rem;
+            width: 60px;
+        }
+
+        .member-table-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e0e0e0;
+            transition: transform 0.2s ease;
+        }
+
+        .member-table-avatar:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo-container">
+            <div class="logo-image">
+                <img src="images/CalypsoDC-VerticPos_rvb.png" alt="CalypsoDC Logo">
+            </div>
+            <div class="logo-text-container">
+                <div class="logo-text">CalyBase</div>
+                <div class="username-text" id="usernameText" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="/">Accueil</a>
+            <a href="/membres.html" class="active">Membres</a>
+            <a href="/events.html">Événements</a>
+            <a href="/login.html" id="authLink">Déconnexion</a>
+        </div>
+    </nav>
+
+    <!-- iPad Safari Debug Panel -->
+    <div id="debugPanel" style="position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.9);color:white;padding:10px;border-radius:8px;z-index:9999;font-family:monospace;font-size:12px;max-width:90vw;max-height:50vh;overflow-y:auto;border:2px solid #333;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:12px;">🔧 Members Debug</span>
+            <div>
+                <button id="copyBtn" style="background:#0066cc;color:white;border:none;padding:16px 24px;border-radius:12px;font-size:24px;margin-right:8px;margin-bottom:8px;min-width:80px;min-height:60px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,0.2);font-weight:bold;">📋 COPY</button>
+                <button id="pauseBtn" style="background:#555;color:white;border:none;padding:8px 12px;border-radius:6px;font-size:14px;margin-right:4px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">⏸️</button>
+                <button id="downloadBtn" style="background:#555;color:white;border:none;padding:8px 12px;border-radius:6px;font-size:14px;margin-right:4px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">💾</button>
+                <button id="debugToggle" style="background:#555;color:white;border:none;padding:8px 12px;border-radius:6px;font-size:14px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">−</button>
+            </div>
+        </div>
+        <div id="debugOutput" style="white-space:pre-wrap;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.3;"></div>
+    </div>
+
+    <main class="container">
+        <div class="membres-section">
+            <div class="membres-header">
+                <h1>Gestion des Membres</h1>
+                <div class="membres-actions">
+                    <button id="importExcelBtn" class="action-button">Importer Excel</button>
+                    <button id="deleteAllBtn" class="action-button danger">Supprimer tous les membres</button>
+                    <button id="updateMedicalBtn" class="action-button">Mettre à jour Medical</button>
+                </div>
+            </div>
+            
+            <div class="members-controls">
+                <div class="search-container">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Rechercher un membre...">
+                </div>
+                <input type="file" id="excelFileInput" accept=".xls,.xlsx" style="display: none;">
+            </div>
+
+            <div class="member-count">
+                Nombre de membres: <span id="memberCount">0</span>
+            </div>
+
+            <div class="membres-table-container">
+                <table class="membres-table">
+                    <thead>
+                        <tr>
+                            <th>Avatar</th>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th>Medical</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membresTableBody">
+                        <!-- Les données seront insérées ici dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 CalyBase. Tous droits réservés.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Handle script loading errors
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT') {
+                console.error('Script loading error:', e);
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                errorMessage.textContent = 'Erreur de chargement des ressources. Veuillez rafraîchir la page.';
+                document.body.appendChild(errorMessage);
+            }
+        }, true);
+
+        // Check if Firebase is loaded
+        window.addEventListener('load', function() {
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase not loaded');
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                errorMessage.textContent = 'Erreur de chargement de Firebase. Veuillez rafraîchir la page.';
+                document.body.appendChild(errorMessage);
+            }
+        });
+    </script>
+    <script src="clear-cache.js"></script>
+    <script src="firebase-app.js"></script>
+    <script src="system-config.js"></script>
+    <script src="member-permissions.js"></script>
+    <!-- DISABLED: auth-guard.js conflicts with page-protection.js -->
+    <!-- <script src="auth-guard.js"></script> -->
+    <script src="comprehensive-logout.js"></script>
+    <script src="navigation.js"></script>
+    <script src="simple-logout.js"></script>
+    <script src="membres.js"></script>
+
+    <!-- iPad Safari Debug System -->
+    <script>
+        (function() {
+            let allLogs = [];
+            let isPaused = false;
+            let debugOutput = null;
+
+            function addToLog(message, color = '#ffffff') {
+                if (isPaused) return;
+                
+                const timestamp = new Date().toISOString();
+                const logEntry = { timestamp, message };
+                allLogs.push(logEntry);
+                
+                if (debugOutput) {
+                    const logLine = document.createElement('div');
+                    logLine.style.color = color;
+                    logLine.style.marginBottom = '2px';
+                    logLine.textContent = `[${timestamp}] ${message}`;
+                    debugOutput.appendChild(logLine);
+                    debugOutput.scrollTop = debugOutput.scrollHeight;
+                }
+            }
+
+            function initializeDebug() {
+                debugOutput = document.getElementById('debugOutput');
+                addToLog('🔧 Members Debug Ready!');
+                addToLog('📱 iPad Safari members page');
+                addToLog('💾 Download logs | ⏸️ Pause/Resume');
+                addToLog(`🔍 DEBUG: Page loaded, URL: ${window.location.href}`);
+                addToLog(`🔍 DEBUG: Document ready state: ${document.readyState}`);
+            }
+
+            // Console interceptor
+            const originalConsole = {
+                log: console.log,
+                warn: console.warn,
+                error: console.error
+            };
+
+            console.log = function(...args) {
+                const message = args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                ).join(' ');
+                addToLog(`📝 ${message}`, '#00ff00');
+                originalConsole.log.apply(console, args);
+            };
+
+            console.warn = function(...args) {
+                const message = args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                ).join(' ');
+                addToLog(`⚠️ ${message}`, '#ffaa00');
+                originalConsole.warn.apply(console, args);
+            };
+
+            console.error = function(...args) {
+                const message = args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                ).join(' ');
+                addToLog(`❌ ${message}`, '#ff4444');
+                originalConsole.error.apply(console, args);
+            };
+
+            // Error interceptor
+            window.addEventListener('error', function(e) {
+                addToLog(`💥 Script error. ${e.message} at ${e.filename}:${e.lineno}`, '#ff4444');
+            });
+
+            window.addEventListener('unhandledrejection', function(e) {
+                addToLog(`💥 Unhandled promise rejection: ${e.reason}`, '#ff4444');
+            });
+
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeDebug);
+            } else {
+                initializeDebug();
+            }
+
+            // Button handlers
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('debugToggle').onclick = (e) => {
+                    e.stopPropagation();
+                    const panel = document.getElementById('debugPanel');
+                    const output = document.getElementById('debugOutput');
+                    const isMinimized = output.style.display === 'none';
+                    
+                    output.style.display = isMinimized ? 'block' : 'none';
+                    e.target.textContent = isMinimized ? '−' : '+';
+                };
+
+                document.getElementById('pauseBtn').onclick = (e) => {
+                    e.stopPropagation();
+                    isPaused = !isPaused;
+                    e.target.textContent = isPaused ? '▶️' : '⏸️';
+                    addToLog(isPaused ? '⏸️ Logging PAUSED' : '▶️ Logging RESUMED', isPaused ? '#ff6600' : '#00ff00');
+                };
+
+                document.getElementById('copyBtn').onclick = (e) => {
+                    e.stopPropagation();
+                    copyLogs();
+                };
+
+                document.getElementById('downloadBtn').onclick = (e) => {
+                    e.stopPropagation();
+                    downloadLogs();
+                };
+            });
+
+            function copyLogs() {
+                if (allLogs.length === 0) {
+                    addToLog('⚠️ No logs to copy', '#ffaa00');
+                    return;
+                }
+
+                // Create log content
+                let logContent = `CalyBase iPad Safari Debug Logs - MEMBERS PAGE\n`;
+                logContent += `Generated: ${new Date().toISOString()}\n`;
+                logContent += `Browser: ${navigator.userAgent}\n`;
+                logContent += `Page: ${window.location.href}\n`;
+                logContent += `Total Logs: ${allLogs.length}\n`;
+                logContent += '='.repeat(80) + '\n\n';
+
+                allLogs.forEach(log => {
+                    logContent += `[${log.timestamp}] ${log.message}\n`;
+                });
+
+                // Copy to clipboard
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(logContent).then(() => {
+                        addToLog('📋 Copied all logs to clipboard!', '#00ff00');
+                    }).catch(err => {
+                        addToLog('❌ Copy failed: ' + err.message, '#ff4444');
+                        fallbackCopy(logContent);
+                    });
+                } else {
+                    fallbackCopy(logContent);
+                }
+            }
+
+            function fallbackCopy(text) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        addToLog('📋 Copied all logs to clipboard! (fallback)', '#00ff00');
+                    } else {
+                        addToLog('❌ Copy failed (fallback)', '#ff4444');
+                    }
+                } catch (err) {
+                    addToLog('❌ Copy not supported', '#ff4444');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+
+            function downloadLogs() {
+                if (allLogs.length === 0) {
+                    addToLog('⚠️ No logs to download', '#ffaa00');
+                    return;
+                }
+
+                // Create log content
+                let logContent = `CalyBase iPad Safari Debug Logs - MEMBERS PAGE\n`;
+                logContent += `Generated: ${new Date().toISOString()}\n`;
+                logContent += `Browser: ${navigator.userAgent}\n`;
+                logContent += `Page: ${window.location.href}\n`;
+                logContent += `Total Logs: ${allLogs.length}\n`;
+                logContent += '='.repeat(80) + '\n\n';
+
+                allLogs.forEach(log => {
+                    logContent += `[${log.timestamp}] ${log.message}\n`;
+                });
+
+                // Create download
+                const blob = new Blob([logContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `calybase-members-debug-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                addToLog(`💾 Downloaded ${allLogs.length} logs to file`, '#00ff00');
+            }
+        })();
+    </script>
+
+</body>
+</html> 

@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - CalyBase</title>
+    <link rel="stylesheet" href="/styles.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .modern-login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modern-login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-section img {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 16px;
+        }
+
+        .logo-section h1 {
+            color: #333;
+            font-size: 28px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .logo-section p {
+            color: #666;
+            margin: 8px 0 0 0;
+            font-size: 14px;
+        }
+
+        .status-section {
+            margin-bottom: 24px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-message {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .status-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .status-message.info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border: 1px solid #bbdefb;
+            color: #1976d2;
+        }
+
+        .status-message.warning {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffeaa7 100%);
+            border: 1px solid #ffcc02;
+            color: #e65100;
+        }
+
+        .status-message.error {
+            background: linear-gradient(135deg, #ffebee 0%, #f8d7da 100%);
+            border: 1px solid #f5c6cb;
+            color: #c62828;
+        }
+
+        .status-message.success {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border: 1px solid #c3e6cb;
+            color: #2e7d32;
+        }
+
+        .modern-login-form {
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-links {
+            margin-top: 24px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .form-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin: 0 12px;
+            transition: color 0.2s ease;
+        }
+
+        .form-links a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .action-button {
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            margin: 8px 4px;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+
+        .action-button:hover {
+            background: #e9ecef;
+            text-decoration: none;
+        }
+
+        .action-button.primary {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .action-button.primary:hover {
+            background: #5a6fd8;
+        }
+
+        /* Hide traditional error message div */
+        .error-message {
+            display: none !important;
+        }
+
+        /* Override any conflicting external styles */
+        .modern-login-container {
+            display: block !important;
+            justify-content: initial !important;
+            align-items: initial !important;
+            min-height: auto !important;
+            padding: 40px !important;
+        }
+
+        .modern-login-form {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+    
+    <!-- Application Constants -->
+    <script src="constants.js"></script>
+    <!-- Mobile Detection and Optimization -->
+    <script src="device-utils.js"></script>
+    <!-- iPad/Safari Fix (MUST load early) -->
+    <script src="ipad-safari-fix.js"></script>
+    
+    <!-- Visual Debug Overlay for iPad Testing -->
+    <script>
+    // Visual Debug Overlay for iPad Safari Debugging - Shows console logs on screen
+    (function() {
+        'use strict';
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (!isIOS || !isSafari) return;
+
+        let debugOverlay, logContainer, isMinimized = false, isPaused = false;
+        let allLogs = []; // Store all logs for download
+
+        function createDebugOverlay() {
+            debugOverlay = document.createElement('div');
+            debugOverlay.style.cssText = `position:fixed;top:10px;right:10px;width:380px;max-height:450px;background:rgba(0,0,0,0.95);border:2px solid #00ff00;border-radius:8px;color:#00ff00;font-family:monospace;font-size:10px;z-index:999999;box-shadow:0 4px 20px rgba(0,0,0,0.5);`;
+
+            const header = document.createElement('div');
+            header.style.cssText = `background:#333;padding:8px 12px;border-bottom:1px solid #555;display:flex;justify-content:space-between;align-items:center;min-height:60px;`;
+            header.innerHTML = `
+                <span style="font-size:12px;">🔧 Login Debug</span>
+                <div>
+                    <button id="copyBtn" style="background:#0066cc;color:white;border:none;padding:16px 24px;border-radius:12px;font-size:24px;margin-right:8px;margin-bottom:8px;min-width:80px;min-height:60px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,0.2);font-weight:bold;">📋 COPY</button>
+                    <button id="pauseBtn" style="background:#555;color:white;border:none;padding:8px 12px;border-radius:6px;font-size:14px;margin-right:4px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">⏸️</button>
+                    <button id="downloadBtn" style="background:#555;color:white;border:none;padding:8px 12px;border-radius:6px;font-size:14px;margin-right:4px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">💾</button>
+                    <button id="debugToggle" style="background:#555;color:white;border:none;padding:8px 12px;border-radius:6px;font-size:14px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">−</button>
+                </div>
+            `;
+
+            logContainer = document.createElement('div');
+            logContainer.style.cssText = `padding:10px;max-height:350px;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word;`;
+
+            debugOverlay.appendChild(header);
+            debugOverlay.appendChild(logContainer);
+            document.body.appendChild(debugOverlay);
+
+            // Event listeners for buttons
+            document.getElementById('debugToggle').onclick = (e) => {
+                e.stopPropagation();
+                isMinimized = !isMinimized;
+                const btn = e.target;
+                if (isMinimized) {
+                    logContainer.style.display = 'none';
+                    btn.textContent = '+';
+                } else {
+                    logContainer.style.display = 'block';
+                    btn.textContent = '−';
+                }
+            };
+
+            document.getElementById('pauseBtn').onclick = (e) => {
+                e.stopPropagation();
+                isPaused = !isPaused;
+                const btn = e.target;
+                btn.textContent = isPaused ? '▶️' : '⏸️';
+                btn.style.background = isPaused ? '#ff6600' : '#555';
+                addToLog(isPaused ? '⏸️ Logging PAUSED' : '▶️ Logging RESUMED', isPaused ? '#ff6600' : '#00ff00');
+            };
+
+            document.getElementById('copyBtn').onclick = (e) => {
+                e.stopPropagation();
+                copyLogs();
+            };
+
+            document.getElementById('downloadBtn').onclick = (e) => {
+                e.stopPropagation();
+                downloadLogs();
+            };
+
+            addToLog('🔧 Login Debug Ready!', '#00ff00');
+            addToLog('📱 iPad Safari login page', '#ffff00');
+            addToLog('💾 Download logs | ⏸️ Pause/Resume', '#ccc');
+        }
+
+        function addToLog(message, color = '#00ff00') {
+            if (!logContainer) return;
+            
+            const time = new Date().toLocaleTimeString();
+            const timestamp = new Date().toISOString();
+            
+            // Always store in allLogs array for download
+            allLogs.push({
+                timestamp: timestamp,
+                time: time,
+                message: message,
+                color: color
+            });
+            
+            // Only add to visual display if not paused
+            if (!isPaused) {
+                const entry = document.createElement('div');
+                entry.style.cssText = `margin-bottom:1px;color:${color};border-left:2px solid ${color};padding-left:4px;font-size:9px;line-height:1.2;`;
+                entry.innerHTML = `<span style="color:#666;font-size:8px;">[${time}]</span> ${message}`;
+                logContainer.appendChild(entry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
+                // Keep more logs in memory (100 instead of 50)
+                if (logContainer.children.length > 100) {
+                    logContainer.removeChild(logContainer.firstChild);
+                }
+            }
+        }
+
+        function copyLogs() {
+            if (allLogs.length === 0) {
+                addToLog('⚠️ No logs to copy', '#ffaa00');
+                return;
+            }
+
+            // Create log content
+            let logContent = `CalyBase iPad Safari Debug Logs - LOGIN PAGE\n`;
+            logContent += `Generated: ${new Date().toISOString()}\n`;
+            logContent += `Browser: ${navigator.userAgent}\n`;
+            logContent += `Page: ${window.location.href}\n`;
+            logContent += `Total Logs: ${allLogs.length}\n`;
+            logContent += '='.repeat(80) + '\n\n';
+
+            allLogs.forEach(log => {
+                logContent += `[${log.timestamp}] ${log.message}\n`;
+            });
+
+            // Copy to clipboard
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(logContent).then(() => {
+                    addToLog('📋 Copied all logs to clipboard!', '#00ff00');
+                }).catch(err => {
+                    addToLog('❌ Copy failed: ' + err.message, '#ff4444');
+                    fallbackCopy(logContent);
+                });
+            } else {
+                fallbackCopy(logContent);
+            }
+        }
+
+        function fallbackCopy(text) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    addToLog('📋 Copied all logs to clipboard! (fallback)', '#00ff00');
+                } else {
+                    addToLog('❌ Copy failed (fallback)', '#ff4444');
+                }
+            } catch (err) {
+                addToLog('❌ Copy not supported', '#ff4444');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function downloadLogs() {
+            if (allLogs.length === 0) {
+                addToLog('⚠️ No logs to download', '#ffaa00');
+                return;
+            }
+
+            // Create log content
+            let logContent = `CalyBase iPad Safari Debug Logs - LOGIN PAGE\n`;
+            logContent += `Generated: ${new Date().toISOString()}\n`;
+            logContent += `Browser: ${navigator.userAgent}\n`;
+            logContent += `Page: ${window.location.href}\n`;
+            logContent += `Total Logs: ${allLogs.length}\n`;
+            logContent += '='.repeat(80) + '\n\n';
+
+            allLogs.forEach(log => {
+                logContent += `[${log.timestamp}] ${log.message}\n`;
+            });
+
+            // Create download
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `calybase-login-debug-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addToLog(`💾 Downloaded ${allLogs.length} logs to file`, '#00ff00');
+        }
+
+        // Override console
+        const orig = console.log;
+        console.log = function(...args) {
+            orig.apply(console, args);
+            addToLog(args.join(' '), '#00ff00');
+        };
+
+        const origWarn = console.warn;
+        console.warn = function(...args) {
+            origWarn.apply(console, args);
+            addToLog('⚠️ ' + args.join(' '), '#ffaa00');
+        };
+
+        const origError = console.error;
+        console.error = function(...args) {
+            origError.apply(console, args);
+            addToLog('❌ ' + args.join(' '), '#ff4444');
+        };
+
+        window.addEventListener('error', (e) => {
+            addToLog(`💥 ${e.message} at ${e.filename}:${e.lineno}`, '#ff4444');
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', createDebugOverlay);
+        } else {
+            createDebugOverlay();
+        }
+    })();
+    </script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
+
+    <!-- reCAPTCHA - loaded dynamically after config loads -->
+    <script>
+        // Load reCAPTCHA after config is available (with safety check)
+        function loadRecaptcha() {
+            if (window.firebaseConfigPromise && typeof window.firebaseConfigPromise.then === 'function') {
+                window.firebaseConfigPromise.then(() => {
+                    if (window.recaptchaSiteKey) {
+                        const script = document.createElement('script');
+                        script.src = `https://www.google.com/recaptcha/api.js?render=${window.recaptchaSiteKey}`;
+                        script.async = true;
+                        script.defer = true;
+                        document.head.appendChild(script);
+                    }
+                }).catch(err => {
+                    console.warn('reCAPTCHA loading skipped:', err);
+                });
+            } else {
+                setTimeout(loadRecaptcha, 100);
+            }
+        }
+        loadRecaptcha();
+    </script>
+</head>
+<body>
+    <div class="modern-login-container">
+        <div class="logo-section">
+            <img src="images/CalypsoDC-VerticPos_rvb.png" alt="CalypsoDC Logo">
+            <h1>CalyBase</h1>
+            <p>Connectez-vous à votre compte</p>
+        </div>
+
+        <div class="status-section">
+            <div id="statusMessage" class="status-message">
+                <!-- Dynamic status messages will appear here -->
+            </div>
+        </div>
+
+        <form id="loginForm" class="modern-login-form">
+            <div class="form-group">
+                <label for="email">Adresse email</label>
+                <input type="email" id="email" name="email" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+
+            <div class="form-group">
+                <button type="submit" id="loginButton" class="login-button">
+                    <span id="buttonText">Se connecter</span>
+                    <div id="buttonSpinner" class="loading-spinner" style="display: none;"></div>
+                </button>
+            </div>
+
+            <div class="form-links">
+                <a href="/forgot-password.html">Mot de passe oublié ?</a>
+                <a href="/register.html">Créer un compte</a>
+            </div>
+        </form>
+
+        <!-- Hidden traditional error message for compatibility -->
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="account-lockout-client.js"></script>
+    <script>
+        // Modern status message system
+        const statusMessage = document.getElementById('statusMessage');
+        
+        function showStatus(message, type = 'info', persistent = false) {
+            statusMessage.className = `status-message ${type} show`;
+            statusMessage.innerHTML = message;
+            
+            if (!persistent) {
+                // Auto-hide after 5 seconds for non-persistent messages
+                setTimeout(() => {
+                    statusMessage.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        function hideStatus() {
+            statusMessage.classList.remove('show');
+        }
+
+        function setLoading(loading) {
+            const button = document.getElementById('loginButton');
+            const buttonText = document.getElementById('buttonText');
+            const buttonSpinner = document.getElementById('buttonSpinner');
+            
+            if (loading) {
+                button.disabled = true;
+                buttonText.textContent = 'Connexion en cours...';
+                buttonSpinner.style.display = 'block';
+            } else {
+                button.disabled = false;
+                buttonText.textContent = 'Se connecter';
+                buttonSpinner.style.display = 'none';
+            }
+        }
+
+        // Check for URL parameters and show initial status
+        const urlParams = new URLSearchParams(window.location.search);
+        const securityReason = urlParams.get('security');
+        const returnUrl = urlParams.get('return');
+        
+        if (securityReason) {
+            let message = '';
+            switch (securityReason) {
+                case 'session_expired':
+                    message = '<i class="fas fa-clock"></i> <strong>Session expirée</strong><br>Veuillez vous reconnecter pour continuer';
+                    break;
+                case 'access_denied':
+                    message = '<i class="fas fa-shield-alt"></i> <strong>Accès protégé</strong><br>Connexion requise pour accéder à cette page';
+                    break;
+                case 'emergency_logout':
+                    message = '<i class="fas fa-exclamation-triangle"></i> <strong>Déconnexion de sécurité</strong><br>Votre session a été fermée par mesure de sécurité';
+                    break;
+                default:
+                    message = '<i class="fas fa-info-circle"></i> <strong>Connexion requise</strong><br>Veuillez vous connecter pour continuer';
+            }
+            
+            if (returnUrl) {
+                message += `<br><small style="opacity: 0.8;">Page demandée: ${returnUrl}</small>`;
+            }
+            
+            showStatus(message, 'info', true);
+        }
+
+        // Firebase initialization
+        let auth;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase not loaded');
+                }
+                
+                showStatus('<i class="fas fa-cog fa-spin"></i> Initialisation du système...', 'info');
+                
+                const firebaseConfig = await window.firebaseConfigPromise;
+                
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                
+                auth = firebase.auth();
+                window.db = firebase.firestore();
+                
+                hideStatus();
+                
+                // Handle already logged in users
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        showStatus(
+                            `<i class="fas fa-user-check"></i> <strong>Déjà connecté</strong><br>
+                            Connecté en tant que: ${user.email}<br>
+                            <div style="margin-top: 12px;">
+                                <a href="/index.html" class="action-button primary">Continuer vers le tableau de bord</a>
+                                <a href="#" onclick="forceLogout()" class="action-button">Se déconnecter</a>
+                            </div>`,
+                            'success',
+                            true
+                        );
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+                showStatus(
+                    '<i class="fas fa-exclamation-triangle"></i> <strong>Erreur technique</strong><br>Impossible de charger le système. Veuillez rafraîchir la page.',
+                    'error',
+                    true
+                );
+            }
+        });
+
+        // Force logout function
+        window.forceLogout = async function() {
+            try {
+                setLoading(true);
+                showStatus('<i class="fas fa-sign-out-alt"></i> Déconnexion en cours...', 'info');
+                
+                await auth.signOut();
+                
+                hideStatus();
+                setTimeout(() => {
+                    showStatus('<i class="fas fa-check"></i> Déconnecté avec succès. Vous pouvez maintenant vous connecter.', 'success');
+                }, 500);
+                
+            } catch (error) {
+                showStatus('<i class="fas fa-exclamation-triangle"></i> Erreur lors de la déconnexion', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Login form handler
+        const loginForm = document.getElementById('loginForm');
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showStatus('<i class="fas fa-exclamation-circle"></i> <strong>Champs requis</strong><br>Veuillez remplir tous les champs', 'warning');
+                return;
+            }
+            
+            try {
+                setLoading(true);
+                hideStatus();
+                
+                // Check account lockout
+                if (window.accountLockout) {
+                    await window.accountLockout.checkLockout(email);
+                }
+
+                // Firebase authentication
+                console.log('🔍 DEBUG: Starting Firebase signInWithEmailAndPassword');
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                console.log('✅ DEBUG: Firebase login successful for:', user.email);
+                
+                // Reset failed attempts on success
+                if (window.accountLockout) {
+                    await window.accountLockout.resetFailedAttempts(email);
+                }
+                
+                // Set session tracking - use Safari-safe storage
+                const now = Date.now();
+                const storage = window.SafeStorage || localStorage;
+                console.log('🔍 DEBUG: Setting session data, storage type:', storage === window.SafeStorage ? 'SafeStorage' : 'localStorage');
+                storage.setItem('loginTime', now.toString());
+                storage.setItem('lastActivity', now.toString());
+                console.log('✅ DEBUG: Session data set, loginTime:', now);
+                
+                // Get reCAPTCHA token
+                let recaptchaToken = null;
+                try {
+                    if (typeof grecaptcha !== 'undefined' && window.recaptchaSiteKey) {
+                        recaptchaToken = await grecaptcha.execute(window.recaptchaSiteKey, {action: 'login'});
+                    }
+                } catch (recaptchaError) {
+                    console.warn('reCAPTCHA error:', recaptchaError);
+                }
+
+                // Check/create user document and verify status
+                let userStatus = 'active';
+                try {
+                    const firestore = firebase.firestore();
+                    const userDocRef = firestore.collection('users').doc(user.uid);
+                    const userDoc = await userDocRef.get();
+                    
+                    if (!userDoc.exists) {
+                        const userData = {
+                            email: user.email,
+                            username: user.displayName || null,
+                            role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                            approved: false,
+                            status: 'pending',
+                            emailVerified: user.emailVerified || false,
+                            uid: user.uid,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        
+                        await userDocRef.set(userData);
+                        userStatus = 'pending';
+                    } else {
+                        const userData = userDoc.data();
+                        userStatus = userData.status || 'pending';
+                        
+                        await userDocRef.update({
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                } catch (docError) {
+                    console.warn('User document error:', docError);
+                }
+                
+                // Handle user status
+                if (userStatus === 'pending') {
+                    await auth.signOut();
+                    
+                    showStatus(
+                        `<i class="fas fa-clock"></i> <strong>Compte en attente d'approbation</strong><br>
+                        Votre connexion a réussi, mais votre compte doit être approuvé par un administrateur.<br><br>
+                        <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                            <strong>Email:</strong> ${user.email}<br>
+                            <strong>Date de demande:</strong> ${new Date().toLocaleDateString('fr-FR')}
+                        </div>
+                        <small>Vous recevrez un email de confirmation une fois votre compte approuvé.</small>`,
+                        'warning',
+                        true
+                    );
+                    return;
+                    
+                } else if (userStatus === 'inactive') {
+                    await auth.signOut();
+                    
+                    showStatus(
+                        '<i class="fas fa-user-slash"></i> <strong>Compte désactivé</strong><br>Votre compte a été désactivé. Veuillez contacter un administrateur.',
+                        'error',
+                        true
+                    );
+                    return;
+                }
+
+                // Backend session creation
+                try {
+                    await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, recaptchaToken })
+                    });
+                } catch (backendError) {
+                    console.warn('Backend login warning:', backendError);
+                }
+
+                // Success - redirect with Safari compatibility
+                showStatus('<i class="fas fa-check-circle"></i> <strong>Connexion réussie !</strong><br>Redirection en cours...', 'success');
+                
+                // Enhanced redirect for Safari/iPad compatibility
+                const performRedirect = async () => {
+                    console.log('🔍 DEBUG: Starting redirect preparation');
+                    
+                    // For Safari, ensure auth state and session are properly set
+                    if (window.SafariSession) {
+                        window.SafariSession.setLoginTime();
+                        console.log('🍎 Safari session data set before redirect');
+                    }
+                    
+                    // For Safari, wait a bit longer to ensure auth state is stable
+                    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+                    const isIPadSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && isSafari;
+                    const redirectDelay = isIPadSafari ? 2500 : 1500;
+                    
+                    console.log('🔍 DEBUG: Browser detection for redirect:', {
+                        isSafari,
+                        isIPadSafari,
+                        redirectDelay
+                    });
+                    
+                                    console.log(`🔍 DEBUG: Setting redirect timer for ${redirectDelay}ms`);
+                
+                // Safari-compatible redirect with multiple fallbacks
+                let redirectAttempts = 0;
+                const maxAttempts = 3;
+                
+                const executeRedirect = () => {
+                    redirectAttempts++;
+                    console.log(`🔄 DEBUG: Executing redirect attempt ${redirectAttempts}/${maxAttempts}`);
+                    console.log('🔍 DEBUG: Final auth state before redirect:', !!window.auth?.currentUser);
+                    
+                    try {
+                        // Method 1: Standard redirect
+                        window.location.href = '/index.html';
+                        console.log('✅ DEBUG: Standard redirect executed');
+                        
+                        // Fallback check after 1 second
+                        setTimeout(() => {
+                            if (window.location.pathname !== '/index.html' && redirectAttempts < maxAttempts) {
+                                console.log('⚠️ DEBUG: Standard redirect failed, trying location.replace');
+                                window.location.replace('/index.html');
+                            }
+                        }, 1000);
+                        
+                    } catch (error) {
+                        console.error('❌ DEBUG: Redirect failed:', error);
+                        if (redirectAttempts < maxAttempts) {
+                            console.log('🔄 DEBUG: Retrying redirect in 500ms');
+                            setTimeout(executeRedirect, 500);
+                        } else {
+                            console.log('💥 DEBUG: All redirect attempts failed - showing manual link');
+                            showStatus(
+                                '<i class="fas fa-arrow-right"></i> <strong>Redirection automatique échouée</strong><br>' +
+                                '<a href="/index.html" style="color: white; text-decoration: underline;">Cliquez ici pour continuer</a>',
+                                'warning',
+                                true
+                            );
+                        }
+                    }
+                };
+                
+                // Use shorter, more reliable timing for iPad Safari  
+                const safariDelay = isIPadSafari ? 1000 : redirectDelay;
+                console.log(`🔍 DEBUG: Using safer delay: ${safariDelay}ms for redirect`);
+                
+                setTimeout(executeRedirect, safariDelay);
+                };
+                
+                performRedirect();
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                const email = document.getElementById('email').value.trim();
+                
+                // Handle lockout errors
+                if (error.message && error.message.includes('Compte temporairement bloqué')) {
+                    showStatus(`<i class="fas fa-lock"></i> <strong>Compte bloqué</strong><br>${error.message}`, 'error', true);
+                    return;
+                }
+                
+                // Record failed attempts for auth errors
+                if (email && window.accountLockout && (
+                    error.code === 'auth/wrong-password' ||
+                    error.code === 'auth/user-not-found' ||
+                    error.code === 'auth/invalid-credential' ||
+                    error.code === 'auth/invalid-login-credentials' ||
+                    error.message.includes('INVALID_LOGIN_CREDENTIALS')
+                )) {
+                    try {
+                        await window.accountLockout.recordFailedAttempt(email);
+                    } catch (lockoutError) {
+                        if (lockoutError.message.includes('Trop de tentatives échouées')) {
+                            showStatus(`<i class="fas fa-lock"></i> <strong>Compte bloqué</strong><br>${lockoutError.message}`, 'error', true);
+                            return;
+                        }
+                    }
+                }
+                
+                // Show user-friendly error messages
+                let errorMessage = '';
+                let errorIcon = 'fas fa-exclamation-circle';
+                
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorIcon = 'fas fa-user-slash';
+                        errorMessage = '<strong>Compte introuvable</strong><br>Aucun compte n\'existe avec cette adresse email';
+                        break;
+                    case 'auth/wrong-password':
+                    case 'auth/invalid-credential':
+                    case 'auth/invalid-login-credentials':
+                        errorIcon = 'fas fa-key';
+                        errorMessage = '<strong>Identifiants incorrects</strong><br>Email ou mot de passe invalide';
+                        break;
+                    case 'auth/invalid-email':
+                        errorIcon = 'fas fa-at';
+                        errorMessage = '<strong>Email invalide</strong><br>Veuillez saisir une adresse email valide';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorIcon = 'fas fa-hourglass-half';
+                        errorMessage = '<strong>Trop de tentatives</strong><br>Veuillez patienter avant de réessayer';
+                        break;
+                    case 'auth/user-disabled':
+                        errorIcon = 'fas fa-ban';
+                        errorMessage = '<strong>Compte désactivé</strong><br>Contactez l\'administrateur';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorIcon = 'fas fa-wifi';
+                        errorMessage = '<strong>Problème de connexion</strong><br>Vérifiez votre connexion internet';
+                        break;
+                    default:
+                        errorMessage = '<strong>Erreur de connexion</strong><br>Veuillez réessayer';
+                }
+                
+                showStatus(`<i class="${errorIcon}"></i> ${errorMessage}`, 'error');
+                
+            } finally {
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html> 

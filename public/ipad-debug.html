@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPad Safari Debug - CalyBase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background: #1a1a1a;
+            color: #00ff00;
+            font-size: 14px;
+        }
+        .debug-header {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .debug-box {
+            background: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+            background: rgba(0,255,0,0.1);
+        }
+        .log-error {
+            border-left-color: #ff4444;
+            background: rgba(255,68,68,0.1);
+            color: #ff6666;
+        }
+        .log-warning {
+            border-left-color: #ffaa00;
+            background: rgba(255,170,0,0.1);
+            color: #ffcc66;
+        }
+        .log-info {
+            border-left-color: #4488ff;
+            background: rgba(68,136,255,0.1);
+            color: #66aaff;
+        }
+        .button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            min-width: 120px;
+        }
+        .button:hover {
+            background: #0088ff;
+        }
+        .button.danger {
+            background: #cc3333;
+        }
+        .button.success {
+            background: #33cc33;
+        }
+        .status-box {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status-success {
+            background: rgba(51,204,51,0.2);
+            border: 1px solid #33cc33;
+        }
+        .status-error {
+            background: rgba(204,51,51,0.2);
+            border: 1px solid #cc3333;
+        }
+        .status-warning {
+            background: rgba(255,170,0,0.2);
+            border: 1px solid #ffaa00;
+        }
+        .timestamp {
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-header">
+        <h1>🔧 iPad Safari Debug Mode</h1>
+        <p>Detailed authentication debugging for CalyBase</p>
+    </div>
+
+    <div class="status-box" id="statusBox">
+        <div id="browserInfo">Detecting browser...</div>
+    </div>
+
+    <div style="text-align: center; margin: 20px 0;">
+        <button class="button" onclick="testLogin()">🔐 Test Authentication</button>
+        <button class="button" onclick="testAuthPersistence()">🔄 Test Auth Persistence</button>
+        <button class="button" onclick="testPageProtection()">🛡️ Test Page Protection</button>
+        <button class="button" onclick="simulateLogin()">⚡ Simulate Login Process</button>
+        <button class="button" onclick="testWithSimulatedData()">🧪 Test Protection with Simulated Data</button>
+        <button class="button" onclick="checkAllStorage()">📂 Check All Storage</button>
+        <button class="button" onclick="clearLogs()">🗑️ Clear Logs</button>
+        <button class="button success" onclick="copyAllLogs()">📋 Copy All Logs</button>
+        <button class="button" onclick="downloadLogs()">💾 Download Logs</button>
+    </div>
+
+    <div class="debug-box">
+        <h3>🔍 Debug Logs:</h3>
+        <div id="debugLogs"></div>
+    </div>
+
+    <!-- Load Required Scripts -->
+    <script src="constants.js"></script>
+    <script src="device-utils.js"></script>
+    <script src="ipad-safari-fix.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-app.js"></script>
+
+    <script>
+        let allLogs = [];
+        let debugContainer;
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const timestampISO = new Date().toISOString();
+            
+            const logEntry = {
+                timestamp: timestampISO,
+                time: timestamp,
+                message: message,
+                type: type
+            };
+            
+            allLogs.push(logEntry);
+            
+            if (!debugContainer) {
+                debugContainer = document.getElementById('debugLogs');
+            }
+            
+            const logDiv = document.createElement('div');
+            logDiv.className = `log-entry log-${type}`;
+            logDiv.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span> 
+                <span>${message}</span>
+            `;
+            
+            debugContainer.appendChild(logDiv);
+            debugContainer.scrollTop = debugContainer.scrollHeight;
+            
+            // Keep only last 100 logs visible
+            if (debugContainer.children.length > 100) {
+                debugContainer.removeChild(debugContainer.firstChild);
+            }
+        }
+
+        // Override console to capture all logs
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+
+        console.log = function(...args) {
+            originalConsole.log.apply(console, args);
+            addLog(args.join(' '), 'info');
+        };
+
+        console.error = function(...args) {
+            originalConsole.error.apply(console, args);
+            addLog(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalConsole.warn.apply(console, args);
+            addLog(args.join(' '), 'warning');
+        };
+
+        console.info = function(...args) {
+            originalConsole.info.apply(console, args);
+            addLog(args.join(' '), 'info');
+        };
+
+        function updateBrowserInfo() {
+            const userAgent = navigator.userAgent;
+            const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+            
+            // Enhanced iPad detection for newer Safari versions that spoof desktop (SAME AS PAGE-PROTECTION.JS)
+            const hasTouchEvents = 'ontouchstart' in window;
+            const isStandalone = window.navigator.standalone;
+            const maxTouchPoints = navigator.maxTouchPoints || 0;
+            const hasOrientationAPI = 'orientation' in window;
+            const isLikelyIPad = (
+                maxTouchPoints > 1 && 
+                hasTouchEvents && 
+                isSafari && 
+                (isIOS || userAgent.includes('Macintosh')) &&
+                hasOrientationAPI
+            );
+            
+            const isIPadSafari = isIOS || isLikelyIPad;
+            
+            // Make this available globally to match page-protection.js
+            window.isIPadSafari = isIPadSafari;
+            window.isSafari = isSafari;
+            
+            const statusBox = document.getElementById('statusBox');
+            const browserInfo = document.getElementById('browserInfo');
+            
+            if (isIPadSafari) {
+                statusBox.className = 'status-box status-success';
+                const detectionMethod = isIOS ? 'User Agent' : 'Touch Detection';
+                browserInfo.innerHTML = `
+                    ✅ <strong>iPad Safari Detected (${detectionMethod})</strong><br>
+                    🍎 Enhanced debugging active<br>
+                    📱 Device: ${screen.width}x${screen.height}<br>
+                    👆 Touch Points: ${maxTouchPoints}<br>
+                    🔄 Orientation API: ${hasOrientationAPI}
+                `;
+            } else if (isSafari) {
+                statusBox.className = 'status-box status-warning';
+                browserInfo.innerHTML = `
+                    ⚠️ <strong>Safari Detected (Desktop/Mac)</strong><br>
+                    🔍 Touch: ${hasTouchEvents}, Points: ${maxTouchPoints}<br>
+                    📱 Standalone: ${isStandalone}<br>
+                    🔄 Orientation: ${hasOrientationAPI}
+                `;
+            } else {
+                statusBox.className = 'status-box status-error';
+                browserInfo.innerHTML = `
+                    ❌ <strong>Not Safari Browser</strong><br>
+                    ⚠️ This debug tool is for iPad Safari
+                `;
+            }
+            
+            addLog(`Browser detected: ${isIPadSafari ? 'iPad Safari' : isSafari ? 'Safari' : 'Other'}`);
+            addLog(`User Agent: ${userAgent}`);
+            addLog(`Screen: ${screen.width}x${screen.height}`);
+            addLog(`Viewport: ${window.innerWidth}x${window.innerHeight}`);
+            addLog(`Touch Events: ${hasTouchEvents}, Max Touch Points: ${maxTouchPoints}`);
+            addLog(`Platform: ${navigator.platform}`);
+            addLog(`Standalone Mode: ${isStandalone}`);
+            addLog(`Orientation API: ${hasOrientationAPI}`);
+            addLog(`Likely iPad (enhanced detection): ${isLikelyIPad}`);
+        }
+
+        async function testLogin() {
+            addLog('🔐 Starting authentication test...', 'info');
+            
+            try {
+                // Check if Safari fixes are loaded
+                addLog('🔍 Checking Safari fixes...', 'info');
+                addLog(`SafeStorage: ${!!window.SafeStorage}`, 'info');
+                addLog(`SafariSession: ${!!window.SafariSession}`, 'info');
+                addLog(`createSafariAuthStateChecker: ${!!window.createSafariAuthStateChecker}`, 'info');
+                
+                // Check Firebase
+                addLog('🔍 Checking Firebase...', 'info');
+                addLog(`Firebase available: ${typeof firebase !== 'undefined'}`, 'info');
+                addLog(`Firebase config: ${!!window.firebaseConfig}`, 'info');
+                
+                // Wait for Firebase to be ready
+                let attempts = 0;
+                while (typeof firebase === 'undefined' && attempts < 30) {
+                    addLog(`Waiting for Firebase... attempt ${attempts + 1}`, 'warning');
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase failed to load');
+                }
+                
+                addLog('✅ Firebase loaded successfully', 'info');
+                
+                // Check auth state
+                if (window.auth) {
+                    addLog('🔍 Checking current auth state...', 'info');
+                    const currentUser = window.auth.currentUser;
+                    if (currentUser) {
+                        addLog(`✅ User already authenticated: ${currentUser.email}`, 'info');
+                        
+                        // Test token validation
+                        try {
+                            const token = await currentUser.getIdToken(true);
+                            addLog('✅ Token validation successful', 'info');
+                            
+                            // Check session data in both storages
+                            const regularStorage = localStorage;
+                            const safeStorage = window.SafeStorage;
+                            
+                            addLog('🔍 Checking session data across storages...', 'info');
+                            
+                            // Regular localStorage
+                            const loginTime = regularStorage.getItem('loginTime');
+                            const lastActivity = regularStorage.getItem('lastActivity');
+                            const loginTime_safari = safeStorage?.getItem('loginTime');
+                            const lastActivity_safari = safeStorage?.getItem('lastActivity');
+                            
+                            addLog(`Regular Storage - Login: ${loginTime}, Activity: ${lastActivity}`, 'info');
+                            addLog(`Safari Storage - Login: ${loginTime_safari}, Activity: ${lastActivity_safari}`, 'info');
+                            
+                            // Check for conflicts
+                            if (loginTime && loginTime_safari && loginTime !== loginTime_safari) {
+                                addLog('⚠️ CONFLICT: Different login times in regular vs Safari storage!', 'warning');
+                            }
+                            
+                            if (loginTime) {
+                                const sessionAge = Date.now() - parseInt(loginTime);
+                                addLog(`Session age: ${Math.round(sessionAge / 1000 / 60)} minutes`, 'info');
+                                
+                                // Check if session is very recent (could indicate fresh login)
+                                if (sessionAge < 120000) { // 2 minutes
+                                    addLog('ℹ️ Recent login detected - this could trigger emergency bypass', 'info');
+                                }
+                            }
+                            
+                            // Test Safari Session specifically
+                            if (window.SafariSession) {
+                                try {
+                                    const sessionCheck = window.SafariSession.checkSession();
+                                    addLog(`Safari Session Status: ${JSON.stringify(sessionCheck)}`, 'info');
+                                    
+                                    // Check Safari-specific session data
+                                    const safariLoginTime = window.SafeStorage?.getItem('safari_loginTime');
+                                    const safariActivity = window.SafeStorage?.getItem('safari_lastActivity');
+                                    addLog(`Safari Session Times - Login: ${safariLoginTime}, Activity: ${safariActivity}`, 'info');
+                                    
+                                } catch (safariError) {
+                                    addLog(`Safari Session Error: ${safariError.message}`, 'warning');
+                                }
+                            }
+                            
+                            addLog('🎉 Authentication test PASSED!', 'info');
+                            
+                        } catch (tokenError) {
+                            addLog(`❌ Token validation failed: ${tokenError.message}`, 'error');
+                        }
+                    } else {
+                        addLog('❌ No user currently authenticated', 'warning');
+                        addLog('ℹ️ You need to login first at /login.html', 'info');
+                        
+                        // Still check for leftover session data that might cause conflicts
+                        addLog('🔍 Checking for leftover session data...', 'info');
+                        const loginTime = localStorage.getItem('loginTime');
+                        const safariLoginTime = window.SafeStorage?.getItem('loginTime');
+                        
+                        if (loginTime || safariLoginTime) {
+                            addLog('⚠️ Found session data without authenticated user - potential conflict!', 'warning');
+                            addLog(`Regular storage login time: ${loginTime}`, 'warning');
+                            addLog(`Safari storage login time: ${safariLoginTime}`, 'warning');
+                        }
+                    }
+                } else {
+                    addLog('❌ Firebase Auth not available', 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Authentication test failed: ${error.message}`, 'error');
+                console.error('Test error details:', error);
+            }
+        }
+
+        async function testPageProtection() {
+            addLog('🛡️ Testing page protection logic...', 'info');
+            
+            try {
+                // Simulate the page protection checks (SAME LOGIC AS PAGE-PROTECTION.JS)
+                const userAgent = navigator.userAgent;
+                const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+                const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+                
+                // Enhanced iPad detection for newer Safari versions that spoof desktop
+                const hasTouchEvents = 'ontouchstart' in window;
+                const maxTouchPoints = navigator.maxTouchPoints || 0;
+                const hasOrientationAPI = 'orientation' in window;
+                const isLikelyIPad = (
+                    maxTouchPoints > 1 && 
+                    hasTouchEvents && 
+                    isSafari && 
+                    (isIOS || userAgent.includes('Macintosh')) &&
+                    hasOrientationAPI
+                );
+                
+                const isIPadSafari = isIOS || isLikelyIPad;
+                
+                addLog(`Device detection: iPad Safari = ${isIPadSafari}`, 'info');
+                addLog(`  - maxTouchPoints: ${maxTouchPoints}`, 'info');
+                addLog(`  - hasTouchEvents: ${hasTouchEvents}`, 'info');
+                addLog(`  - isSafari: ${isSafari}`, 'info');
+                addLog(`  - hasOrientationAPI: ${hasOrientationAPI}`, 'info');
+                addLog(`  - userAgent contains Macintosh: ${userAgent.includes('Macintosh')}`, 'info');
+                addLog(`  - isIOS (traditional): ${isIOS}`, 'info');
+                addLog(`  - isLikelyIPad (enhanced): ${isLikelyIPad}`, 'info');
+                
+                // Determine timeout like page-protection.js does
+                let authTimeout;
+                if (isIPadSafari) {
+                    authTimeout = 15000; // 15 seconds for iPad Safari
+                    addLog('🕐 iPad Safari detected - using 15 second timeout', 'info');
+                } else if (isSafari) {
+                    authTimeout = 8000; // 8 seconds for other Safari
+                    addLog('🕐 Safari detected - using 8 second timeout', 'info');
+                } else {
+                    authTimeout = 3000; // 3 seconds for other browsers
+                    addLog('🕐 Other browser - using 3 second timeout', 'info');
+                }
+                
+                // Check for emergency bypass (recent login) - Updated logic to match page-protection.js
+                const storage = window.SafeStorage || localStorage;
+                const loginTime = storage.getItem('loginTime') || storage.getItem('safari_loginTime');
+                
+                if (loginTime) {
+                    const sessionAge = Date.now() - parseInt(loginTime);
+                    const bypassWindow = isIPadSafari ? 3 * 60 * 1000 : 2 * 60 * 1000; // 3min for iPad, 2min for Safari
+                    addLog(`Session age: ${Math.round(sessionAge / 1000)} seconds`, 'info');
+                    addLog(`Bypass window: ${bypassWindow / 1000} seconds (${isIPadSafari ? 'iPad' : 'Safari'} mode)`, 'info');
+                    
+                    if (sessionAge < bypassWindow && isSafari) {
+                        addLog('✅ Emergency bypass would trigger - recent login detected', 'info');
+                        addLog('ℹ️ This should prevent the white page issue', 'info');
+                        return;
+                    } else if (!isSafari) {
+                        addLog('⚠️ Not Safari browser - emergency bypass only works for Safari', 'warning');
+                    } else {
+                        addLog(`⚠️ Session too old for emergency bypass (${Math.round(sessionAge / 1000)}s > ${bypassWindow / 1000}s)`, 'warning');
+                    }
+                } else {
+                    addLog('❌ No login time found - emergency bypass cannot trigger', 'error');
+                }
+                
+                // Test Safari Auth State Checker availability
+                if (window.createSafariAuthStateChecker && isSafari) {
+                    addLog('🔍 Testing Safari Auth State Checker...', 'info');
+                    try {
+                        // The function returns a Promise, not a callback function
+                        addLog('🔄 Running Safari auth state check...', 'info');
+                        
+                        // Create timeout promise
+                        const timeoutPromise = new Promise((resolve) => {
+                            setTimeout(() => {
+                                addLog(`⏰ Auth check timed out after ${authTimeout}ms`, 'warning');
+                                resolve({ authenticated: false, timeout: true });
+                            }, authTimeout);
+                        });
+                        
+                        // Race between auth check and timeout
+                        const authResult = await Promise.race([
+                            window.createSafariAuthStateChecker(),
+                            timeoutPromise
+                        ]);
+                        
+                        addLog(`🔍 Auth result: ${JSON.stringify(authResult)}`, 'info');
+                        
+                        if (authResult.authenticated) {
+                            addLog('🎉 Page protection test PASSED - user would be allowed through', 'info');
+                            if (authResult.user) {
+                                addLog(`✅ Authenticated user: ${authResult.user.email}`, 'info');
+                            }
+                        } else {
+                            if (authResult.timeout) {
+                                addLog('❌ Page protection test TIMED OUT - this causes the white page!', 'error');
+                            } else {
+                                addLog('❌ Page protection test FAILED - user would be redirected to login', 'error');
+                            }
+                            addLog('🔍 This is the cause of your white page issue!', 'error');
+                            
+                            if (authResult.error) {
+                                addLog(`Error details: ${authResult.error.message}`, 'error');
+                            }
+                        }
+                        
+                    } catch (checkerError) {
+                        addLog(`❌ Safari Auth State Checker failed: ${checkerError.message}`, 'error');
+                    }
+                } else {
+                    addLog('⚠️ Safari Auth State Checker not available or not Safari browser', 'warning');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Page protection test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAuthPersistence() {
+            addLog('🔄 Testing authentication persistence...', 'info');
+            
+            try {
+                // Check Firebase Auth persistence settings
+                if (window.firebase && window.firebase.auth) {
+                    const persistenceState = window.firebase.auth.Auth.Persistence || 'unknown';
+                    addLog(`Firebase Auth Persistence: ${JSON.stringify(persistenceState)}`, 'info');
+                    
+                    // Check current persistence setting
+                    if (window.auth) {
+                        try {
+                            // Try to get current persistence
+                            addLog('🔍 Checking current Firebase auth state...', 'info');
+                            
+                            // Test auth state change listener
+                            const authPromise = new Promise((resolve) => {
+                                const unsubscribe = window.auth.onAuthStateChanged((user) => {
+                                    unsubscribe();
+                                    resolve(user);
+                                });
+                                
+                                // Timeout after 3 seconds
+                                setTimeout(() => {
+                                    unsubscribe();
+                                    resolve(null);
+                                }, 3000);
+                            });
+                            
+                            const authUser = await authPromise;
+                            
+                            if (authUser) {
+                                addLog(`✅ Auth listener found user: ${authUser.email}`, 'info');
+                                addLog(`🔍 User UID: ${authUser.uid}`, 'info');
+                                addLog(`🔍 Email verified: ${authUser.emailVerified}`, 'info');
+                                addLog(`🔍 Created: ${new Date(authUser.metadata.creationTime).toLocaleString()}`, 'info');
+                                addLog(`🔍 Last sign in: ${new Date(authUser.metadata.lastSignInTime).toLocaleString()}`, 'info');
+                            } else {
+                                addLog('❌ Auth listener found no user', 'warning');
+                                addLog('💡 This indicates auth state was lost!', 'error');
+                            }
+                            
+                            // Check for tokens in browser storage
+                            addLog('🔍 Checking browser storage for Firebase tokens...', 'info');
+                            
+                            const checkStorage = (storage, storageName) => {
+                                for (let i = 0; i < storage.length; i++) {
+                                    const key = storage.key(i);
+                                    if (key && key.includes('firebase')) {
+                                        addLog(`${storageName}: ${key} = ${storage.getItem(key)?.substring(0, 50)}...`, 'info');
+                                    }
+                                }
+                            };
+                            
+                            checkStorage(localStorage, 'localStorage');
+                            checkStorage(sessionStorage, 'sessionStorage');
+                            
+                            // Check IndexedDB for Firebase data
+                            if ('indexedDB' in window) {
+                                try {
+                                    const databases = await indexedDB.databases();
+                                    const firebaseDbs = databases.filter(db => db.name?.includes('firebase'));
+                                    addLog(`IndexedDB Firebase databases: ${firebaseDbs.length}`, 'info');
+                                    firebaseDbs.forEach(db => {
+                                        addLog(`  - ${db.name} (version ${db.version})`, 'info');
+                                    });
+                                } catch (idbError) {
+                                    addLog(`IndexedDB check failed: ${idbError.message}`, 'warning');
+                                }
+                            }
+                            
+                        } catch (persistenceError) {
+                            addLog(`❌ Persistence test failed: ${persistenceError.message}`, 'error');
+                        }
+                    }
+                } else {
+                    addLog('❌ Firebase Auth not available for persistence test', 'error');
+                }
+                
+                // Test storage conflicts
+                addLog('🔍 Testing for storage conflicts...', 'info');
+                
+                // Check for conflicting auth data
+                const authKeys = ['loginTime', 'lastActivity', 'userId', 'userEmail', 'authToken'];
+                let conflictFound = false;
+                
+                authKeys.forEach(key => {
+                    const localValue = localStorage.getItem(key);
+                    const sessionValue = sessionStorage.getItem(key);
+                    const safeValue = window.SafeStorage?.getItem(key);
+                    
+                    if ((localValue || sessionValue || safeValue)) {
+                        const values = [localValue, sessionValue, safeValue].filter(v => v);
+                        const uniqueValues = [...new Set(values)];
+                        
+                        if (uniqueValues.length > 1) {
+                            addLog(`⚠️ CONFLICT in ${key}: ${uniqueValues.join(' vs ')}`, 'warning');
+                            conflictFound = true;
+                        } else if (uniqueValues.length === 1) {
+                            addLog(`✅ Consistent ${key}: ${uniqueValues[0]?.substring(0, 30)}...`, 'info');
+                        }
+                    }
+                });
+                
+                if (!conflictFound) {
+                    addLog('✅ No storage conflicts detected', 'info');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Auth persistence test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function simulateLogin() {
+            addLog('⚡ Simulating login process...', 'info');
+            
+            try {
+                const now = Date.now().toString();
+                
+                // Set regular storage (like normal login should do)
+                localStorage.setItem('loginTime', now);
+                localStorage.setItem('lastActivity', now);
+                addLog('✅ Set regular storage: loginTime and lastActivity', 'info');
+                
+                // Set Safari storage if available
+                if (window.SafeStorage) {
+                    window.SafeStorage.setItem('loginTime', now);
+                    window.SafeStorage.setItem('lastActivity', now);
+                    addLog('✅ Set Safari storage: loginTime and lastActivity', 'info');
+                }
+                
+                // Set Safari session if available
+                if (window.SafariSession && window.SafariSession.setLoginTime) {
+                    window.SafariSession.setLoginTime();
+                    addLog('✅ Called SafariSession.setLoginTime()', 'info');
+                }
+                
+                addLog('🎉 Login simulation complete! Now test page protection.', 'info');
+                
+            } catch (error) {
+                addLog(`❌ Login simulation failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testWithSimulatedData() {
+            addLog('🧪 Testing page protection after session simulation...', 'info');
+            
+            try {
+                // First ensure we have session data from simulation
+                const hasSessionData = localStorage.getItem('loginTime') || 
+                                     window.SafeStorage?.getItem('loginTime') ||
+                                     window.SafeStorage?.getItem('safari_loginTime');
+                
+                if (!hasSessionData) {
+                    addLog('⚠️ No session data found - running simulation first...', 'warning');
+                    simulateLogin();
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Wait a bit
+                }
+                
+                addLog('🛡️ Now testing page protection with session data...', 'info');
+                await testPageProtection();
+                
+            } catch (error) {
+                addLog(`❌ Combined test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function checkAllStorage() {
+            addLog('📂 Checking all storage locations...', 'info');
+            
+            try {
+                // Check localStorage
+                addLog('🔍 Checking localStorage:', 'info');
+                const localLoginTime = localStorage.getItem('loginTime');
+                const localActivity = localStorage.getItem('lastActivity');
+                addLog(`  - loginTime: ${localLoginTime}`, 'info');
+                addLog(`  - lastActivity: ${localActivity}`, 'info');
+                
+                // Check sessionStorage
+                addLog('🔍 Checking sessionStorage:', 'info');
+                const sessionLoginTime = sessionStorage.getItem('loginTime');
+                const sessionActivity = sessionStorage.getItem('lastActivity');
+                addLog(`  - loginTime: ${sessionLoginTime}`, 'info');
+                addLog(`  - lastActivity: ${sessionActivity}`, 'info');
+                
+                // Check SafeStorage
+                if (window.SafeStorage) {
+                    addLog('🔍 Checking SafeStorage:', 'info');
+                    const safeLoginTime = window.SafeStorage.getItem('loginTime');
+                    const safeActivity = window.SafeStorage.getItem('lastActivity');
+                    const safariLoginTime = window.SafeStorage.getItem('safari_loginTime');
+                    const safariActivity = window.SafeStorage.getItem('safari_lastActivity');
+                    addLog(`  - loginTime: ${safeLoginTime}`, 'info');
+                    addLog(`  - lastActivity: ${safeActivity}`, 'info');
+                    addLog(`  - safari_loginTime: ${safariLoginTime}`, 'info');
+                    addLog(`  - safari_lastActivity: ${safariActivity}`, 'info');
+                } else {
+                    addLog('❌ SafeStorage not available', 'warning');
+                }
+                
+                // Check if any recent login times exist
+                const allTimes = [localLoginTime, sessionLoginTime, 
+                    window.SafeStorage?.getItem('loginTime'),
+                    window.SafeStorage?.getItem('safari_loginTime')].filter(t => t);
+                
+                if (allTimes.length > 0) {
+                    const mostRecent = Math.max(...allTimes.map(t => parseInt(t)));
+                    const ageMinutes = Math.round((Date.now() - mostRecent) / 1000 / 60);
+                    addLog(`🕐 Most recent login: ${ageMinutes} minutes ago`, 'info');
+                    
+                    if (ageMinutes < 2) {
+                        addLog('✅ Emergency bypass should trigger!', 'info');
+                    } else {
+                        addLog('⚠️ Too old for emergency bypass', 'warning');
+                    }
+                } else {
+                    addLog('❌ No login times found anywhere!', 'error');
+                    addLog('💡 This explains the white page issue - no session data to validate', 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Storage check failed: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLogs() {
+            allLogs = [];
+            document.getElementById('debugLogs').innerHTML = '';
+            addLog('🗑️ Logs cleared', 'info');
+        }
+
+        function copyAllLogs() {
+            if (allLogs.length === 0) {
+                addLog('⚠️ No logs to copy', 'warning');
+                return;
+            }
+
+            let logContent = `CalyBase iPad Safari Debug Logs\n`;
+            logContent += `Generated: ${new Date().toISOString()}\n`;
+            logContent += `Browser: ${navigator.userAgent}\n`;
+            logContent += `Page: ${window.location.href}\n`;
+            logContent += `Total Logs: ${allLogs.length}\n`;
+            logContent += '='.repeat(80) + '\n\n';
+
+            allLogs.forEach(log => {
+                logContent += `[${log.timestamp}] [${log.type.toUpperCase()}] ${log.message}\n`;
+            });
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(logContent).then(() => {
+                    addLog('📋 All logs copied to clipboard!', 'info');
+                }).catch(err => {
+                    addLog(`❌ Copy failed: ${err.message}`, 'error');
+                });
+            } else {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = logContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    addLog('📋 Logs copied (fallback method)', 'info');
+                } catch (err) {
+                    addLog('❌ Copy not supported', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function downloadLogs() {
+            if (allLogs.length === 0) {
+                addLog('⚠️ No logs to download', 'warning');
+                return;
+            }
+
+            let logContent = `CalyBase iPad Safari Debug Logs\n`;
+            logContent += `Generated: ${new Date().toISOString()}\n`;
+            logContent += `Browser: ${navigator.userAgent}\n`;
+            logContent += `Page: ${window.location.href}\n`;
+            logContent += `Total Logs: ${allLogs.length}\n`;
+            logContent += '='.repeat(80) + '\n\n';
+
+            allLogs.forEach(log => {
+                logContent += `[${log.timestamp}] [${log.type.toUpperCase()}] ${log.message}\n`;
+            });
+
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `calybase-ipad-debug-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addLog(`💾 Downloaded ${allLogs.length} logs`, 'info');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('🔧 iPad Debug Mode initialized', 'info');
+            updateBrowserInfo();
+            
+            // Auto-test after 2 seconds
+            setTimeout(() => {
+                addLog('🔄 Running automatic authentication test...', 'info');
+                testLogin();
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 
