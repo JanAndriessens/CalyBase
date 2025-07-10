@@ -31,9 +31,13 @@ const corsOptions = {
             'http://localhost:3000',
             'http://localhost:3001', 
             'https://calybase.firebaseapp.com',
-            'https://calybase.web.app',
-            'https://caly-base.vercel.app'
+            'https://calybase.web.app'
         ];
+        
+        // Allow all Vercel deployments dynamically
+        if (origin && origin.includes('.vercel.app')) {
+            allowedOrigins.push(origin);
+        }
         
         // Add production domain if specified in environment
         if (process.env.PRODUCTION_DOMAIN) {
