@@ -953,9 +953,12 @@ function disableAllMemberActions() {
 // Check permissions for view member details action
 async function canViewMember() {
     try {
-        return await canViewMemberDetails();
+        console.log('🔧 [DEBUG] canViewMember() - calling canViewMemberDetails()...');
+        const result = await canViewMemberDetails();
+        console.log('🔧 [DEBUG] canViewMember() - result:', result);
+        return result;
     } catch (error) {
-        console.error('Error checking view member permission:', error);
+        console.error('❌ [DEBUG] Error checking view member permission:', error);
         return false;
     }
 }
@@ -963,9 +966,12 @@ async function canViewMember() {
 // Check permissions for edit member action
 async function canEditMember() {
     try {
-        return await canModifyMembers();
+        console.log('🔧 [DEBUG] canEditMember() - calling canModifyMembers()...');
+        const result = await canModifyMembers();
+        console.log('🔧 [DEBUG] canEditMember() - result:', result);
+        return result;
     } catch (error) {
-        console.error('Error checking edit member permission:', error);
+        console.error('❌ [DEBUG] Error checking edit member permission:', error);
         return false;
     }
 }
@@ -973,29 +979,45 @@ async function canEditMember() {
 // ⚡ OPTIMIZED: Fast view and edit permissions with timeout
 async function applyMemberActionPermissions() {
     try {
+        console.log('🔧 [DEBUG] Starting applyMemberActionPermissions...');
+        
         // ⚡ Show all buttons immediately (better UX)
         const viewButtons = document.querySelectorAll('.view-member-btn');
         const editButtons = document.querySelectorAll('.edit-member-btn');
+        
+        console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons and ${editButtons.length} edit buttons`);
         
         [...viewButtons, ...editButtons].forEach(button => {
             button.style.display = '';
             button.disabled = false;
         });
+        
+        console.log('🔧 [DEBUG] Buttons shown, now checking permissions...');
 
         // ⚡ Check permissions with timeout (non-blocking)
         const permissionTimeout = 1500; // 1.5 second timeout
-        const [canView, canEdit] = await Promise.all([
-            Promise.race([
-                canViewMember(),
-                new Promise(resolve => setTimeout(() => resolve(true), permissionTimeout))
-            ]),
-            Promise.race([
-                canEditMember(),
-                new Promise(resolve => setTimeout(() => resolve(true), permissionTimeout))
-            ])
+        
+        console.log('🔧 [DEBUG] Calling canViewMember()...');
+        const canViewPromise = Promise.race([
+            canViewMember(),
+            new Promise(resolve => setTimeout(() => {
+                console.log('🔧 [DEBUG] canViewMember() timed out, defaulting to true');
+                resolve(true);
+            }, permissionTimeout))
         ]);
         
-        console.log('📋 Member action permissions:', { canView, canEdit });
+        console.log('🔧 [DEBUG] Calling canEditMember()...');
+        const canEditPromise = Promise.race([
+            canEditMember(),
+            new Promise(resolve => setTimeout(() => {
+                console.log('🔧 [DEBUG] canEditMember() timed out, defaulting to true');
+                resolve(true);
+            }, permissionTimeout))
+        ]);
+        
+        const [canView, canEdit] = await Promise.all([canViewPromise, canEditPromise]);
+        
+        console.log('📋 [DEBUG] Member action permissions result:', { canView, canEdit });
         
         // ⚡ Only hide if explicitly denied
         if (!canView) {
@@ -1003,7 +1025,9 @@ async function applyMemberActionPermissions() {
                 button.style.display = 'none';
                 button.disabled = true;
             });
-            console.log('🚫 View member buttons hidden - no permission');
+            console.log('🚫 [DEBUG] View member buttons HIDDEN - no permission');
+        } else {
+            console.log('✅ [DEBUG] View member buttons VISIBLE - permission granted');
         }
         
         if (!canEdit) {
@@ -1011,11 +1035,60 @@ async function applyMemberActionPermissions() {
                 button.style.display = 'none';
                 button.disabled = true;
             });
-            console.log('🚫 Edit member buttons hidden - no permission');
+            console.log('🚫 [DEBUG] Edit member buttons HIDDEN - no permission');
+        } else {
+            console.log('✅ [DEBUG] Edit member buttons VISIBLE - permission granted');
         }
         
+        console.log('🔧 [DEBUG] applyMemberActionPermissions completed successfully');
+        
     } catch (error) {
+        console.error('❌ [DEBUG] Member action permissions check failed:', error);
         console.warn('⚠️ Member action permissions check failed, allowing all actions:', error);
         // ⚡ OPTIMIZATION: On error, allow all actions (permissive fallback)
     }
-} 
+}
+
+// Debug function for testing membre page permissions
+window.debugMembresPermissions = async function() {
+    console.log('🔧 [DEBUG] === MEMBRES PAGE PERMISSIONS DEBUG ===');
+    
+    try {
+        // Check button elements
+        const viewButtons = document.querySelectorAll('.view-member-btn');
+        const editButtons = document.querySelectorAll('.edit-member-btn');
+        
+        console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons and ${editButtons.length} edit buttons`);
+        
+        viewButtons.forEach((btn, index) => {
+            console.log(`🔧 [DEBUG] View button ${index}: display=${btn.style.display}, disabled=${btn.disabled}`);
+        });
+        
+        editButtons.forEach((btn, index) => {
+            console.log(`🔧 [DEBUG] Edit button ${index}: display=${btn.style.display}, disabled=${btn.disabled}`);
+        });
+        
+        // Test permission functions
+        console.log('🔧 [DEBUG] Testing permission functions...');
+        
+        const canView = await canViewMember();
+        const canEdit = await canEditMember();
+        
+        console.log(`🔧 [DEBUG] Permission results: canView=${canView}, canEdit=${canEdit}`);
+        
+        // Test direct permission calls
+        const directView = await canViewMemberDetails();
+        const directEdit = await canModifyMembers();
+        
+        console.log(`🔧 [DEBUG] Direct permission results: canViewMemberDetails=${directView}, canModifyMembers=${directEdit}`);
+        
+        // Re-apply permissions
+        console.log('🔧 [DEBUG] Re-applying permissions...');
+        await applyMemberActionPermissions();
+        
+    } catch (error) {
+        console.error('❌ [DEBUG] Debug failed:', error);
+    }
+    
+    console.log('🔧 [DEBUG] === END MEMBRES DEBUG ===');
+}; 
