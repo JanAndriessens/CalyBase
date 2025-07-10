@@ -73,15 +73,18 @@ class MemberPermissions {
 
         // Check role-based permissions from system config
         const rolePermissions = this.systemConfig?.permissions?.[this.userRole];
-        if (rolePermissions && rolePermissions[permission] === true) {
-            return true;
+        
+        // If role permissions exist, use them (don't fall back to global settings)
+        if (rolePermissions && rolePermissions.hasOwnProperty(permission)) {
+            return rolePermissions[permission] === true;
         }
 
-        // Check global settings
+        // Only fall back to global settings for system-wide permissions that aren't role-specific
         const memberManagement = this.systemConfig?.memberManagement;
         if (memberManagement) {
             switch (permission) {
                 case 'canDeleteMembers':
+                    // Only check global setting if role doesn't have this permission defined
                     return memberManagement.allowMemberDeletion === true;
                 case 'canImportMembers':
                     return memberManagement.allowExcelImport === true;
@@ -91,8 +94,7 @@ class MemberPermissions {
                     return memberManagement.allowMemberCreation === true;
                 case 'canManageMemberAvatars':
                     return memberManagement.allowAvatarManagement === true;
-                case 'canViewMemberDetails':
-                    return memberManagement.allowDetailedViewAccess === true;
+                // REMOVED: canViewMemberDetails fallback - this should ONLY be role-based
             }
         }
 
