@@ -15,7 +15,15 @@ class MemberPermissions {
         if (this.initialized) return;
         
         try {
-            this.currentUser = await this.getCurrentUser();
+            // Wait for auth to be ready
+            await new Promise(resolve => {
+                const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+            
+            this.currentUser = firebase.auth().currentUser;
             if (!this.currentUser) {
                 throw new Error('No authenticated user');
             }
@@ -38,7 +46,7 @@ class MemberPermissions {
             console.log('👑 User role assigned:', this.userRole);
             
             console.log('⚙️ Getting system configuration...');
-            await this.waitForConfig();  // NEW: Wait for config
+            await this.waitForConfig();
             console.log('⚙️ System config loaded:', !!this.systemConfig);
             
             if (this.systemConfig && this.systemConfig.permissions) {
