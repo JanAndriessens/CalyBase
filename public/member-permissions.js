@@ -11,53 +11,45 @@ class MemberPermissions {
 
     // Initialize the permissions checker
     async initialize() {
+        console.log('🔧 Initializing member permissions...');
+        if (this.initialized) return;
+        
         try {
-            console.log('🔧 Initializing member permissions...');
-            
-            // Wait for authentication
-            await this.waitForAuth();
-            
-            // Get current user
-            this.currentUser = window.auth?.currentUser;
-            console.log('👤 Current user:', this.currentUser?.email || 'No user');
-            console.log('👤 User UID:', this.currentUser?.uid || 'No UID');
-            
+            this.currentUser = await this.getCurrentUser();
             if (!this.currentUser) {
-                throw new Error('Aucun utilisateur authentifié');
+                throw new Error('No authenticated user');
             }
-
-            // Get user role from Firestore
-            console.log('🗄️ Fetching user document from Firestore...');
-            const userDoc = await window.db.collection('users').doc(this.currentUser.uid).get();
-            console.log('🗄️ User document exists:', userDoc.exists);
             
+            console.log('👤 Current user:', this.currentUser.email);
+            console.log('👤 User UID:', this.currentUser.uid);
+            
+            console.log('🗄️ Fetching user document from Firestore...');
+            const userDoc = await firebase.firestore().collection('users').doc(this.currentUser.uid).get();
+            
+            console.log('🗄️ User document exists:', userDoc.exists);
             if (!userDoc.exists) {
-                console.error('❌ User document does not exist for UID:', this.currentUser.uid);
-                throw new Error('Document utilisateur non trouvé');
+                throw new Error('User document not found');
             }
-
+            
             const userData = userDoc.data();
             console.log('🗄️ User data from Firestore:', userData);
             
-            this.userRole = userData.role;
+            this.userRole = userData.role || 'user';
             console.log('👑 User role assigned:', this.userRole);
-
-            // Get system configuration
+            
             console.log('⚙️ Getting system configuration...');
-            if (window.systemConfig) {
-                this.systemConfig = window.systemConfig.getConfig();
-                console.log('⚙️ System config loaded:', !!this.systemConfig);
-                console.log('⚙️ Available roles in config:', Object.keys(this.systemConfig?.permissions || {}));
-            } else {
-                console.warn('⚠️ window.systemConfig not available');
+            await this.waitForConfig();  // NEW: Wait for config
+            console.log('⚙️ System config loaded:', !!this.systemConfig);
+            
+            if (this.systemConfig && this.systemConfig.permissions) {
+                console.log('⚙️ Available roles in config:', Object.keys(this.systemConfig.permissions));
             }
-
+            
             this.initialized = true;
             console.log('✅ Member permissions initialized for role:', this.userRole);
-            
         } catch (error) {
-            console.error('❌ Failed to initialize member permissions:', error);
-            console.error('❌ Error stack:', error.stack);
+            console.error('Failed to initialize member permissions:', error);
+            this.initialized = false;
             throw error;
         }
     }
@@ -83,16 +75,16 @@ class MemberPermissions {
     }
 
     // Check if user has a specific permission
-    hasPermission(permission) {
+    async hasPermission(permission) {
         if (!this.initialized) {
-            console.warn('⚠️ Member permissions not initialized');
-            return false;
+            await this.initialize();
         }
-
-        console.log(`🔍 Checking permission '${permission}' for role '${this.userRole}'`);
-        console.log('🔍 System config available:', !!this.systemConfig);
         
-        // Check role-based permissions from system config
+        await this.waitForConfig();  // NEW: Ensure config is loaded
+        
+        console.log(`🔍 Checking permission '${permission}' for role '${this.userRole}'`);
+        console.log(`🔍 System config available: ${!!this.systemConfig}`);
+        
         const rolePermissions = this.systemConfig?.permissions?.[this.userRole];
         console.log(`🔍 Role permissions for '${this.userRole}':`, rolePermissions);
         
@@ -128,43 +120,55 @@ class MemberPermissions {
         return false;
     }
 
+    // Add this new method after the class definition
+    async waitForConfig(timeout = 5000) {
+        const start = Date.now();
+        while (!this.systemConfig && Date.now() - start < timeout) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        if (!this.systemConfig) {
+            throw new Error('System config timeout');
+        }
+        return this.systemConfig;
+    }
+
     // Check if user can delete members
-    canDeleteMembers() {
+    async canDeleteMembers() {
         return this.hasPermission('canDeleteMembers');
     }
 
     // Check if user can import members from Excel
-    canImportMembers() {
+    async canImportMembers() {
         return this.hasPermission('canImportMembers');
     }
 
     // Check if user can modify member information
-    canModifyMembers() {
+    async canModifyMembers() {
         return this.hasPermission('canModifyMembers');
     }
 
     // Check if user can create new members
-    canCreateMembers() {
+    async canCreateMembers() {
         return this.hasPermission('canCreateMembers');
     }
 
     // Check if user can manage member avatars
-    canManageMemberAvatars() {
+    async canManageMemberAvatars() {
         return this.hasPermission('canManageMemberAvatars');
     }
 
     // Check if user can view member details
-    canViewMemberDetails() {
+    async canViewMemberDetails() {
         return this.hasPermission('canViewMemberDetails');
     }
 
     // Check if user can bulk delete members
-    canBulkDeleteMembers() {
+    async canBulkDeleteMembers() {
         return this.hasPermission('canBulkDeleteMembers');
     }
 
     // Check if user requires approval for deletion
-    requiresApprovalForDeletion() {
+    async requiresApprovalForDeletion() {
         if (!this.initialized) return true;
         
         const memberManagement = this.systemConfig?.memberManagement;
