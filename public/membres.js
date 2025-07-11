@@ -981,71 +981,55 @@ async function applyMemberActionPermissions() {
     try {
         console.log('🔧 [DEBUG] Starting applyMemberActionPermissions...');
         
-        // ⚡ Show all buttons immediately (better UX)
+        // ⚡ Hide all buttons initially for secure default
         const viewButtons = document.querySelectorAll('.view-member-btn');
         const editButtons = document.querySelectorAll('.edit-member-btn');
         
         console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons and ${editButtons.length} edit buttons`);
         
         [...viewButtons, ...editButtons].forEach(button => {
-            button.style.display = '';
-            button.disabled = false;
+            button.style.display = 'none';
+            button.disabled = true;
         });
         
-        console.log('🔧 [DEBUG] Buttons shown, now checking permissions...');
+        console.log('🔧 [DEBUG] Buttons hidden, now checking permissions...');
 
-        // ⚡ Check permissions with timeout (non-blocking)
-        const permissionTimeout = 1500; // 1.5 second timeout
-        
+        // ⚡ Await permission checks without timeout for accuracy
         console.log('🔧 [DEBUG] Calling canViewMember()...');
-        const canViewPromise = Promise.race([
-            canViewMember(),
-            new Promise(resolve => setTimeout(() => {
-                console.log('🔧 [DEBUG] canViewMember() timed out, defaulting to true');
-                resolve(true);
-            }, permissionTimeout))
-        ]);
+        const canView = await canViewMember();
         
         console.log('🔧 [DEBUG] Calling canEditMember()...');
-        const canEditPromise = Promise.race([
-            canEditMember(),
-            new Promise(resolve => setTimeout(() => {
-                console.log('🔧 [DEBUG] canEditMember() timed out, defaulting to true');
-                resolve(true);
-            }, permissionTimeout))
-        ]);
-        
-        const [canView, canEdit] = await Promise.all([canViewPromise, canEditPromise]);
+        const canEdit = await canEditMember();
         
         console.log('📋 [DEBUG] Member action permissions result:', { canView, canEdit });
         
-        // ⚡ Only hide if explicitly denied
-        if (!canView) {
+        // ⚡ Show buttons only if permitted
+        if (canView) {
             viewButtons.forEach(button => {
-                button.style.display = 'none';
-                button.disabled = true;
+                button.style.display = '';
+                button.disabled = false;
             });
-            console.log('🚫 [DEBUG] View member buttons HIDDEN - no permission');
-        } else {
             console.log('✅ [DEBUG] View member buttons VISIBLE - permission granted');
+        } else {
+            console.log('🚫 [DEBUG] View member buttons HIDDEN - no permission');
         }
         
-        if (!canEdit) {
+        if (canEdit) {
             editButtons.forEach(button => {
-                button.style.display = 'none';
-                button.disabled = true;
+                button.style.display = '';
+                button.disabled = false;
             });
-            console.log('🚫 [DEBUG] Edit member buttons HIDDEN - no permission');
-        } else {
             console.log('✅ [DEBUG] Edit member buttons VISIBLE - permission granted');
+        } else {
+            console.log('🚫 [DEBUG] Edit member buttons HIDDEN - no permission');
         }
         
         console.log('🔧 [DEBUG] applyMemberActionPermissions completed successfully');
         
     } catch (error) {
         console.error('❌ [DEBUG] Member action permissions check failed:', error);
-        console.warn('⚠️ Member action permissions check failed, allowing all actions:', error);
-        // ⚡ OPTIMIZATION: On error, allow all actions (permissive fallback)
+        console.warn('⚠️ Member action permissions check failed, keeping buttons hidden for security');
+        // ⚡ On error, keep buttons hidden (secure fallback)
     }
 }
 
