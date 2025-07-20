@@ -101,7 +101,7 @@ class SystemConfig {
                     canModifyMembers: false,
                     canCreateMembers: false,
                     canManageMemberAvatars: false,
-                    canViewMemberDetails: false,
+                    canViewMemberDetails: true,
                     canBulkDeleteMembers: false
                 }
             },

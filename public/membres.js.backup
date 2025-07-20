@@ -986,33 +986,39 @@ async function applyMemberActionPermissions() {
     try {
         console.log('🔧 [DEBUG] Starting applyMemberActionPermissions...');
         
+        // ⚡ Hide all buttons initially for secure default
         const viewButtons = document.querySelectorAll('.view-member-btn');
         const editButtons = document.querySelectorAll('.edit-member-btn');
         
         console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons and ${editButtons.length} edit buttons`);
         
-        // ⚡ Details (view) buttons are ALWAYS visible - no permission check needed
-        viewButtons.forEach(button => {
-            button.style.display = '';
-            button.disabled = false;
-        });
-        console.log('✅ [DEBUG] View member buttons ALWAYS VISIBLE - no permission check required');
-        
-        // ⚡ Hide edit buttons initially for secure default
-        editButtons.forEach(button => {
+        [...viewButtons, ...editButtons].forEach(button => {
             button.style.display = 'none';
             button.disabled = true;
         });
         
-        console.log('🔧 [DEBUG] Edit buttons hidden, now checking edit permissions...');
+        console.log('🔧 [DEBUG] Buttons hidden, now checking permissions...');
 
-        // ⚡ Only check edit permissions - view permissions not needed
+        // ⚡ Await permission checks without timeout for accuracy
+        console.log('🔧 [DEBUG] Calling canViewMember()...');
+        const canView = await canViewMember();
+        
         console.log('🔧 [DEBUG] Calling canEditMember()...');
         const canEdit = await canEditMember();
         
-        console.log('📋 [DEBUG] Member action permissions result:', { canEdit });
+        console.log('📋 [DEBUG] Member action permissions result:', { canView, canEdit });
         
-        // ⚡ Show edit buttons only if permitted
+        // ⚡ Show buttons only if permitted
+        if (canView) {
+            viewButtons.forEach(button => {
+                button.style.display = '';
+                button.disabled = false;
+            });
+            console.log('✅ [DEBUG] View member buttons VISIBLE - permission granted');
+        } else {
+            console.log('🚫 [DEBUG] View member buttons HIDDEN - no permission');
+        }
+        
         if (canEdit) {
             editButtons.forEach(button => {
                 button.style.display = '';
@@ -1027,23 +1033,11 @@ async function applyMemberActionPermissions() {
         
     } catch (error) {
         console.error('❌ [DEBUG] Member action permissions check failed:', error);
-        console.warn('⚠️ Member action permissions check failed, keeping view buttons visible, edit buttons hidden for security');
-        
-        // ⚡ On error, ensure view buttons remain visible but edit buttons stay hidden
-        const viewButtons = document.querySelectorAll('.view-member-btn');
-        const editButtons = document.querySelectorAll('.edit-member-btn');
-        
-        viewButtons.forEach(button => {
-            button.style.display = '';
-            button.disabled = false;
-        });
-        
-        editButtons.forEach(button => {
-            button.style.display = 'none';
-            button.disabled = true;
-        });
+        console.warn('⚠️ Member action permissions check failed, keeping buttons hidden for security');
+        // ⚡ On error, keep buttons hidden (secure fallback)
     }
 }
+
 // Debug function for testing membre page permissions
 window.debugMembresPermissions = async function() {
     console.log('🔧 [DEBUG] === MEMBRES PAGE PERMISSIONS DEBUG ===');
