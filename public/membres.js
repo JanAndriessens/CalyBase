@@ -1008,7 +1008,17 @@ async function applyMemberActionPermissions() {
 
         // ⚡ Only check edit permissions - view permissions not needed
         console.log('🔧 [DEBUG] Calling canEditMember()...');
-        const canEdit = await canEditMember();
+        
+        // ⚡ Use timeout to prevent hanging on permission check
+        let canEdit = false;
+        try {
+            const editPermissionPromise = canEditMember();
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(false), 2000));
+            canEdit = await Promise.race([editPermissionPromise, timeoutPromise]);
+        } catch (permError) {
+            console.warn('🔧 [DEBUG] Edit permission check failed, defaulting to false:', permError);
+            canEdit = false;
+        }
         
         console.log('📋 [DEBUG] Member action permissions result:', { canEdit });
         
@@ -1020,7 +1030,7 @@ async function applyMemberActionPermissions() {
             });
             console.log('✅ [DEBUG] Edit member buttons VISIBLE - permission granted');
         } else {
-            console.log('🚫 [DEBUG] Edit member buttons HIDDEN - no permission');
+            console.log('🚫 [DEBUG] Edit member buttons HIDDEN - no permission or timeout');
         }
         
         console.log('🔧 [DEBUG] applyMemberActionPermissions completed successfully');
