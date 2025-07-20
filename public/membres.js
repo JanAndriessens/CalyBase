@@ -1004,7 +1004,7 @@ async function applyMemberActionPermissions() {
             button.disabled = true;
         });
         
-        console.log('🔧 [DEBUG] Edit buttons hidden, now checking edit permissions...');
+        console.log('🔧 [DEBUG] Edit buttons hidden, now checking edit permissions... (deployment test)');
 
         // ⚡ Only check edit permissions - view permissions not needed
         console.log('🔧 [DEBUG] Calling canEditMember()...');
