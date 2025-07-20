@@ -1771,4 +1771,354 @@ footer {
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* =================== IPAD OPTIMIZATIONS =================== */
+/* Touch-friendly interface optimizations for iPad Safari */
+
+/* iPad Detection Media Query */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+       (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    
+    /* Enhanced Touch Targets - Minimum 44px */
+    .btn-base,
+    button,
+    .nav-links a,
+    .sort-button,
+    .action-button {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 16px;
+        font-size: 1rem;
+    }
+    
+    /* Navigation Touch Optimization */
+    .navbar {
+        min-height: 80px;
+        padding: 0.5rem 1rem;
+    }
+    
+    .nav-links a {
+        padding: 12px 20px;
+        margin: 0 4px;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .nav-links a:hover,
+    .nav-links a:active {
+        background-color: rgba(74, 144, 226, 0.1);
+    }
+    
+    /* Form Input Touch Optimization */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
+    
+    /* Table Touch Optimization */
+    table th,
+    table td {
+        padding: 12px 16px;
+        min-height: 44px;
+    }
+    
+    /* Action buttons in tables */
+    .action-buttons button {
+        min-height: 40px;
+        min-width: 80px;
+        margin: 2px;
+    }
+    
+    /* Search and filter inputs */
+    #searchInput {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 1rem;
+    }
+    
+    /* Modal and dialog optimization */
+    .modal {
+        padding: 20px;
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+        max-width: 90vw;
+    }
+}
+
+/* iPad Landscape Specific */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    .dashboard-container {
+        max-width: 95%;
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* iPad Portrait Specific */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    /* Stack navigation on portrait */
+    .navbar {
+        flex-direction: column;
+        min-height: auto;
+        padding: 1rem;
+    }
+    
+    .nav-links {
+        margin-top: 1rem;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Touch Interaction Enhancements */
+@media (pointer: coarse) {
+    /* Larger touch targets for all touch devices */
+    button,
+    .btn-base,
+    a[role="button"],
+    input[type="submit"],
+    input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Improve scroll behavior */
+    * {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .card-base:hover {
+        transform: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Touch-friendly spacing */
+    .members-list .member-item,
+    .events-list .event-item {
+        margin-bottom: 12px;
+        padding: 16px;
+    }
+}
+
+/* Touch Feedback Styles */
+.touch-active {
+    opacity: 0.7;
+    transform: scale(0.98);
+    transition: all 0.1s ease;
+}
+
+/* Virtual Keyboard Visible State */
+.keyboard-visible {
+    /* Prevent zooming when keyboard appears */
+    zoom: 1;
+}
+
+.keyboard-visible .navbar {
+    /* Reduce navbar height when keyboard is visible */
+    min-height: 60px;
+}
+
+/* iPad Device Specific Styles */
+.ipad-device {
+    /* Optimize for iPad */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(74, 144, 226, 0.3);
+}
+
+.ipad-device .nav-links a {
+    /* Better touch feedback for navigation */
+    position: relative;
+    overflow: hidden;
+}
+
+.ipad-device .nav-links a:active {
+    background-color: rgba(74, 144, 226, 0.2);
+}
+
+/* Orientation-specific styles */
+[data-orientation="landscape"] .dashboard-container {
+    padding: 1rem 2rem;
+}
+
+[data-orientation="portrait"] .dashboard-container {
+    padding: 1rem;
+}
+
+/* Swipe indicators (optional visual feedback) */
+.swipe-indicator {
+    position: fixed;
+    top: 50%;
+    font-size: 2rem;
+    color: rgba(74, 144, 226, 0.6);
+    pointer-events: none;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.swipe-indicator.left {
+    left: 20px;
+}
+
+.swipe-indicator.right {
+    right: 20px;
+}
+
+.swipe-indicator.active {
+    opacity: 1;
+}
+
+/* Virtual Keyboard and Input Optimizations */
+@supports (-webkit-touch-callout: none) {
+    /* iOS/Safari specific optimizations */
+    
+    /* Prevent zoom on input focus */
+    input[type="text"],
+    input[type="email"], 
+    input[type="password"],
+    input[type="number"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    select,
+    textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+        transform: translateZ(0); /* Force hardware acceleration */
+    }
+    
+    /* Better input experience on touch devices */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    /* Floating labels for better UX */
+    .floating-label {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .floating-label input {
+        padding-top: 20px;
+        padding-bottom: 8px;
+    }
+    
+    .floating-label label {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        color: #999;
+    }
+    
+    .floating-label input:focus + label,
+    .floating-label input:not(:placeholder-shown) + label {
+        top: 6px;
+        font-size: 0.8rem;
+        color: var(--primary-color);
+    }
+    
+    /* Input focus improvements */
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    /* Date picker optimization */
+    input[type="date"] {
+        position: relative;
+        cursor: pointer;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        background: transparent;
+        color: var(--primary-color);
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 5px;
+    }
+}
+
+/* Form improvements for iPad */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .auth-form,
+    .member-form,
+    .event-form {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    
+    /* Better button layouts on iPad */
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+    
+    .form-actions button {
+        flex: 1;
+        min-height: 50px;
+    }
+    
+    /* Search and filter improvements */
+    .search-container {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .search-container input {
+        padding-right: 50px;
+    }
+    
+    .search-container::after {
+        content: "🔍";
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        pointer-events: none;
+    }
 } 

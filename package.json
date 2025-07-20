@@ -7,6 +7,11 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "optimize": "node scripts/optimize.js",
+    "build": "npm run optimize && npm start",
+    "build:production": "npm run optimize && NODE_ENV=production npm start",
+    "perf:test": "node scripts/performance-test.js",
+    "cache:clear": "node scripts/clear-cache.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

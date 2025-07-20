@@ -9,48 +9,53 @@ const updateMedicalBtn = document.getElementById('updateMedicalBtn');
 // Add this variable at the top of the file with other DOM elements
 let currentMembers = [];
 
+// Create module-specific logger
+const logger = new Logger('Membres');
+
 // Debug function to check library availability
 function checkLibraries() {
-    console.log('=== Library Check ===');
-    console.log('Firebase available:', typeof firebase !== 'undefined');
-    console.log('XLSX available:', typeof XLSX !== 'undefined');
-    console.log('Encoding available:', typeof Encoding !== 'undefined');
-    console.log('window.db available:', !!window.db);
-    console.log('window.auth available:', !!window.auth);
-    console.log('====================');
+    logger.debug('Library availability check', {
+        firebase: typeof firebase !== 'undefined',
+        xlsx: typeof XLSX !== 'undefined',
+        encoding: typeof Encoding !== 'undefined',
+        db: !!window.db,
+        auth: !!window.auth
+    });
 }
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOMContentLoaded - Starting initialization');
+    logger.info('Membres module initializing');
+    logger.time('membres-initialization');
     
     // Initial library check
     checkLibraries();
-    
-    // ⚡ PERFORMANCE OPTIMIZATION: Parallel initialization with reduced timeout
-    console.log('🚀 Starting optimized initialization...');
     
     // MOBILE OPTIMIZATION: Use centralized device detection
     const isMobileDevice = window.DeviceUtils?.isMobileDevice || false;
     const checkInterval = window.DeviceUtils?.checkInterval || 100;
     const timeout = window.DeviceUtils?.firebaseTimeout || 3000;
     
-    if (isMobileDevice) {
-        console.log('📱 Membres: Mobile device detected - using optimized intervals');
-    }
+    logger.debug('Device optimization', {
+        isMobile: isMobileDevice,
+        checkInterval,
+        timeout
+    });
 
     const firebaseReady = new Promise((resolve) => {
         const checkFirebase = setInterval(() => {
             if (window.db && window.auth) {
-                console.log('✅ Firebase services ready');
+                logger.info('Firebase services ready');
                 clearInterval(checkFirebase);
                 resolve(true);
             }
-        }, checkInterval); // MOBILE OPTIMIZED: 250ms on mobile instead of 50ms
+        }, checkInterval);
         
-        // Mobile-optimized timeout
         setTimeout(() => {
-            console.warn(`⚠️ Firebase initialization timeout (${isMobileDevice ? '5s mobile' : '3s desktop'})`);
+            logger.warn('Firebase initialization timeout', { 
+                device: isMobileDevice ? 'mobile' : 'desktop',
+                timeout: timeout
+            });
             clearInterval(checkFirebase);
             resolve(false);
         }, timeout);

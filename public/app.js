@@ -1,5 +1,7 @@
 // Import Firebase configuration
 import './firebase-config.js';
+// Import debug utilities
+import './debug-utils.js';
 
 // Function to display error messages
 function showError(message) {
@@ -31,7 +33,7 @@ if (loginForm) {
 
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            console.log('Connexion réussie:', userCredential.user);
+            DebugLogger.log('Connexion réussie:', userCredential.user);
             
             // CRITICAL: Store session data for emergency bypass
             const now = Date.now().toString();
@@ -39,19 +41,19 @@ if (loginForm) {
             // Store in regular localStorage (for emergency bypass)
             localStorage.setItem('loginTime', now);
             localStorage.setItem('lastActivity', now);
-            console.log('✅ Regular session data stored for emergency bypass');
+            DebugLogger.log('✅ Regular session data stored for emergency bypass');
             
             // Store in Safari storage if available
             if (window.SafeStorage) {
                 window.SafeStorage.setItem('loginTime', now);
                 window.SafeStorage.setItem('lastActivity', now);
-                console.log('✅ Safari storage session data stored');
+                DebugLogger.log('✅ Safari storage session data stored');
             }
             
             // Safari-compatible redirect with session setup
             if (window.SafariSession) {
                 window.SafariSession.setLoginTime();
-                console.log('🍎 Safari session data set before redirect');
+                DebugLogger.log('🍎 Safari session data set before redirect');
             }
             
             // Enhanced delay for Safari compatibility
@@ -59,13 +61,13 @@ if (loginForm) {
             const isIPadSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && isSafari;
             const redirectDelay = isIPadSafari ? 1000 : 300;
             
-            console.log(`🔄 Redirecting to home in ${redirectDelay}ms...`);
+            DebugLogger.log(`🔄 Redirecting to home in ${redirectDelay}ms...`);
             setTimeout(() => {
                 window.location.href = '/'; // Redirect to home page after successful login
             }, redirectDelay);
             
         } catch (error) {
-            console.error('Erreur de connexion:', error);
+            DebugLogger.error('Erreur de connexion:', error);
             alert(error.message);
         }
     });
@@ -88,7 +90,7 @@ if (registerForm) {
 
         try {
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            console.log('Inscription réussie:', userCredential.user);
+            DebugLogger.log('Inscription réussie:', userCredential.user);
             
             // CRITICAL: Store session data for emergency bypass (same as login)
             const now = Date.now().toString();
@@ -96,19 +98,19 @@ if (registerForm) {
             // Store in regular localStorage (for emergency bypass)
             localStorage.setItem('loginTime', now);
             localStorage.setItem('lastActivity', now);
-            console.log('✅ Registration: Regular session data stored for emergency bypass');
+            DebugLogger.log('✅ Registration: Regular session data stored for emergency bypass');
             
             // Store in Safari storage if available
             if (window.SafeStorage) {
                 window.SafeStorage.setItem('loginTime', now);
                 window.SafeStorage.setItem('lastActivity', now);
-                console.log('✅ Registration: Safari storage session data stored');
+                DebugLogger.log('✅ Registration: Safari storage session data stored');
             }
             
             // Safari-compatible redirect with session setup
             if (window.SafariSession) {
                 window.SafariSession.setLoginTime();
-                console.log('🍎 Registration: Safari session data set before redirect');
+                DebugLogger.log('🍎 Registration: Safari session data set before redirect');
             }
             
             // Enhanced delay for Safari compatibility
@@ -116,12 +118,12 @@ if (registerForm) {
             const isIPadSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && isSafari;
             const redirectDelay = isIPadSafari ? 1000 : 300;
             
-            console.log(`🔄 Registration: Redirecting to home in ${redirectDelay}ms...`);
+            DebugLogger.log(`🔄 Registration: Redirecting to home in ${redirectDelay}ms...`);
             setTimeout(() => {
                 window.location.href = '/'; // Redirect to home page after successful registration
             }, redirectDelay);
         } catch (error) {
-            console.error('Erreur d\'inscription:', error);
+            DebugLogger.error('Erreur d\'inscription:', error);
             alert(error.message);
         }
     });
