@@ -149,11 +149,27 @@ function displayAvatars(avatars) {
         
         const img = document.createElement('img');
         img.className = 'avatar-image';
-        img.src = avatar.photoURL || '/avatars/default-avatar.svg';
         img.alt = `Avatar de ${avatar.lifrasID}`;
-        img.onerror = () => {
-            img.src = '/avatars/default-avatar.svg';
-        };
+        
+        // Utiliser le système robuste d'avatar si disponible
+        if (window.AvatarUtils) {
+            window.AvatarUtils.setupRobustAvatar(img, avatar.photoURL, avatar.lifrasID, {
+                showLoading: true,
+                loadingClass: 'loading',
+                onSuccess: (finalUrl) => {
+                    console.log(`✅ Avatar management page loaded avatar: ${finalUrl}`);
+                },
+                onFallback: () => {
+                    console.log(`🔄 Avatar management fallback for ${avatar.lifrasID}`);
+                }
+            });
+        } else {
+            // Fallback basique
+            img.src = avatar.photoURL || '/avatars/default-avatar.svg';
+            img.onerror = () => {
+                img.src = '/avatars/default-avatar.svg';
+            };
+        }
 
         const info = document.createElement('div');
         info.className = 'avatar-info';

@@ -535,13 +535,25 @@ function displayParticipants(participants) {
         const avatarDiv = document.createElement('div');
         avatarDiv.className = 'participant-avatar';
         
-        // Créer l'image de l'avatar avec image par défaut immédiate
+        // Créer l'image de l'avatar avec système robuste
         const avatarImg = document.createElement('img');
-        avatarImg.src = '/avatars/default-avatar.svg'; // Image par défaut immédiate
         avatarImg.alt = `${participant.prenom} ${participant.nom}`;
-        avatarImg.onerror = () => {
+        
+        // Utiliser le système robuste d'avatar si disponible
+        if (window.AvatarUtils) {
+            // Récupérer l'URL de l'avatar depuis les données si disponible
+            const primaryUrl = participantAvatars.find(a => a.lifrasID === participant.lifrasID)?.photoURL;
+            window.AvatarUtils.setupRobustAvatar(avatarImg, primaryUrl, participant.lifrasID, {
+                showLoading: false,
+                onFallback: () => console.log(`🔄 Participant avatar fallback for ${participant.lifrasID}`)
+            });
+        } else {
+            // Fallback basique
             avatarImg.src = '/avatars/default-avatar.svg';
-        };
+            avatarImg.onerror = () => {
+                avatarImg.src = '/avatars/default-avatar.svg';
+            };
+        }
 
         avatarDiv.appendChild(avatarImg);
         
@@ -586,13 +598,25 @@ function displayMembers(members) {
         const avatarDiv = document.createElement('div');
         avatarDiv.className = 'member-avatar';
         
-        // Créer l'image de l'avatar avec image par défaut immédiate
+        // Créer l'image de l'avatar avec système robuste
         const avatarImg = document.createElement('img');
-        avatarImg.src = '/avatars/default-avatar.svg'; // Image par défaut immédiate
         avatarImg.alt = `${member.prenom} ${member.nom}`;
-        avatarImg.onerror = () => {
+        
+        // Utiliser le système robuste d'avatar si disponible
+        if (window.AvatarUtils) {
+            // Récupérer l'URL de l'avatar depuis les données si disponible
+            const primaryUrl = memberAvatars.find(a => a.lifrasID === member.lifrasID)?.photoURL;
+            window.AvatarUtils.setupRobustAvatar(avatarImg, primaryUrl, member.lifrasID, {
+                showLoading: false,
+                onFallback: () => console.log(`🔄 Member avatar fallback for ${member.lifrasID}`)
+            });
+        } else {
+            // Fallback basique
             avatarImg.src = '/avatars/default-avatar.svg';
-        };
+            avatarImg.onerror = () => {
+                avatarImg.src = '/avatars/default-avatar.svg';
+            };
+        }
 
         avatarDiv.appendChild(avatarImg);
         

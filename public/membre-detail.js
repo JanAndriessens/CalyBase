@@ -383,77 +383,81 @@ async function loadMembreDetails() {
     }
 }
 
-// Fonction pour charger l'avatar du membre avec optimisation
+// Fonction pour charger l'avatar du membre avec système robuste
 async function loadMemberAvatar(lifrasID) {
     try {
-        console.log('Loading avatar for LifrasID:', lifrasID);
+        console.log('🖼️ Loading avatar for LifrasID:', lifrasID);
         
-        // Vérifier d'abord le cache
-        if (avatarCache.has(lifrasID)) {
-            console.log('Avatar found in cache');
-            memberAvatar.src = avatarCache.get(lifrasID);
-            return;
-        }
-
-        // Afficher un indicateur de chargement
-        memberAvatar.src = '/avatars/default-avatar.svg';
-        memberAvatar.classList.add('loading');
-
-        // Vérifier la collection avatars
-        console.log('Checking avatars collection...');
-        const avatarQuery = await window.db.collection('avatars')
-            .where('lifrasID', '==', lifrasID)
-            .limit(1)
-            .get();
-
-        if (!avatarQuery.empty) {
-            console.log('Avatar document found');
-            const avatarDoc = avatarQuery.docs[0];
-            const avatarData = avatarDoc.data();
+        // Utiliser le nouveau système robuste d'avatar
+        if (window.AvatarUtils) {
+            // Essayer de récupérer l'URL depuis Firebase d'abord
+            let primaryUrl = null;
+            let avatarData = null;
             
-            if (avatarData.photoURL) {
-                console.log('Setting avatar image:', avatarData.photoURL);
-                memberAvatar.src = avatarData.photoURL;
-                manageAvatarCache(lifrasID, avatarData.photoURL);
-
-                // Mettre à jour les champs d'information
-                const avatarLifrasID = document.getElementById('avatarLifrasID');
-                const avatarPhotoURL = document.getElementById('avatarPhotoURL');
-                const avatarCreatedAt = document.getElementById('avatarCreatedAt');
-                const avatarStatus = document.getElementById('avatarStatus');
-
-                if (avatarLifrasID) avatarLifrasID.textContent = `LifrasID: ${avatarData.lifrasID || '-'}`;
-                if (avatarPhotoURL) avatarPhotoURL.textContent = `Photo URL: ${avatarData.photoURL || '-'}`;
-                if (avatarCreatedAt) avatarCreatedAt.textContent = `Créé le: ${avatarData.createdAt ? new Date(avatarData.createdAt.toDate()).toLocaleDateString() : '-'}`;
-                if (avatarStatus) avatarStatus.textContent = `Statut: ${avatarData.status || '-'}`;
+            try {
+                if (window.db) {
+                    const avatarQuery = await window.db.collection('avatars')
+                        .where('lifrasID', '==', lifrasID)
+                        .limit(1)
+                        .get();
+                    
+                    if (!avatarQuery.empty) {
+                        avatarData = avatarQuery.docs[0].data();
+                        primaryUrl = avatarData.photoURL;
+                        console.log('📄 Avatar document found:', !!avatarData);
+                    } else {
+                        console.log('📄 No avatar document found in Firebase');
+                    }
+                }
+            } catch (dbError) {
+                console.warn('⚠️ Firebase avatar query failed:', dbError.message);
             }
+            
+            // Configurer l'avatar avec le système robuste
+            window.AvatarUtils.setupRobustAvatar(memberAvatar, primaryUrl, lifrasID, {
+                showLoading: true,
+                loadingClass: 'loading',
+                onSuccess: (finalUrl) => {
+                    console.log('✅ Avatar loaded successfully:', finalUrl);
+                    manageAvatarCache(lifrasID, finalUrl);
+                },
+                onFallback: () => {
+                    console.log('🔄 Avatar fallback activated for lifrasID:', lifrasID);
+                }
+            });
+            
+            // Mettre à jour les champs d'information si on a des données Firebase
+            updateAvatarInfoFields(avatarData);
+            
         } else {
-            console.log('No avatar document found');
-            // Aucun avatar trouvé, afficher les champs vides
-            const avatarLifrasID = document.getElementById('avatarLifrasID');
-            const avatarPhotoURL = document.getElementById('avatarPhotoURL');
-            const avatarCreatedAt = document.getElementById('avatarCreatedAt');
-            const avatarStatus = document.getElementById('avatarStatus');
-
-            if (avatarLifrasID) avatarLifrasID.textContent = 'LifrasID: -';
-            if (avatarPhotoURL) avatarPhotoURL.textContent = 'Photo URL: -';
-            if (avatarCreatedAt) avatarCreatedAt.textContent = 'Créé le: -';
-            if (avatarStatus) avatarStatus.textContent = 'Statut: -';
+            // Fallback si AvatarUtils n'est pas disponible
+            console.warn('⚠️ AvatarUtils not available, using basic fallback');
+            memberAvatar.src = '/avatars/default-avatar.svg';
+            updateAvatarInfoFields(null);
         }
-
-        memberAvatar.classList.remove('loading');
+        
     } catch (error) {
-        console.error('Erreur lors du chargement de l\'avatar:', error);
-        console.error('Stack trace:', error.stack);
+        console.error('❌ Error in loadMemberAvatar:', error);
+        // Fallback final
         memberAvatar.src = '/avatars/default-avatar.svg';
         memberAvatar.classList.remove('loading');
-        
-        // Reset avatar information fields
-        const avatarLifrasID = document.getElementById('avatarLifrasID');
-        const avatarPhotoURL = document.getElementById('avatarPhotoURL');
-        const avatarCreatedAt = document.getElementById('avatarCreatedAt');
-        const avatarStatus = document.getElementById('avatarStatus');
+        updateAvatarInfoFields(null);
+    }
+}
 
+// Helper function pour mettre à jour les champs d'information
+function updateAvatarInfoFields(avatarData) {
+    const avatarLifrasID = document.getElementById('avatarLifrasID');
+    const avatarPhotoURL = document.getElementById('avatarPhotoURL');
+    const avatarCreatedAt = document.getElementById('avatarCreatedAt');
+    const avatarStatus = document.getElementById('avatarStatus');
+
+    if (avatarData) {
+        if (avatarLifrasID) avatarLifrasID.textContent = `LifrasID: ${avatarData.lifrasID || '-'}`;
+        if (avatarPhotoURL) avatarPhotoURL.textContent = `Photo URL: ${avatarData.photoURL || '-'}`;
+        if (avatarCreatedAt) avatarCreatedAt.textContent = `Créé le: ${avatarData.createdAt ? new Date(avatarData.createdAt.toDate()).toLocaleDateString() : '-'}`;
+        if (avatarStatus) avatarStatus.textContent = `Statut: ${avatarData.status || '-'}`;
+    } else {
         if (avatarLifrasID) avatarLifrasID.textContent = 'LifrasID: -';
         if (avatarPhotoURL) avatarPhotoURL.textContent = 'Photo URL: -';
         if (avatarCreatedAt) avatarCreatedAt.textContent = 'Créé le: -';
