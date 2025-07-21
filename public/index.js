@@ -12,10 +12,10 @@ let dashboardData = {
     isAdmin: false
 };
 
-// Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
+// Initialize dashboard when Firebase is ready
+window.FirebaseManager.onReady(async (services) => {
     try {
-        console.log('🎯 Dashboard: Initializing...');
+        console.log('🎯 Dashboard: Firebase is ready, initializing dashboard...');
         
         // Add a visual debug indicator
         const debugDiv = document.createElement('div');
@@ -26,29 +26,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             border-radius: 5px; z-index: 10000; max-width: 300px;
             font-family: monospace; font-size: 12px;
         `;
-        debugDiv.innerHTML = '🎯 Dashboard initializing...';
+        debugDiv.innerHTML = '🎯 Dashboard initializing with Firebase services...';
         document.body.appendChild(debugDiv);
         
-        // Wait for Firebase to be ready
-        debugDiv.innerHTML += '<br>⏳ Waiting for Firebase...';
-        await waitForFirebaseReady();
-        
-        debugDiv.innerHTML += '<br>✅ Firebase ready!';
-        console.log('✅ Dashboard: Firebase ready, loading data...');
+        // Firebase is already ready from FirebaseManager
+        debugDiv.innerHTML += '<br>✅ Firebase services confirmed!';
+        console.log('✅ Dashboard: Firebase services available:', services);
         
         // Check Firebase services
-        debugDiv.innerHTML += '<br>🔍 Checking services...';
-        debugDiv.innerHTML += `<br>DB: ${window.db ? '✅' : '❌'}`;
-        debugDiv.innerHTML += `<br>Auth: ${window.auth ? '✅' : '❌'}`;
+        debugDiv.innerHTML += '<br>🔍 Service status:';
+        debugDiv.innerHTML += `<br>DB: ${services.db ? '✅' : '❌'}`;
+        debugDiv.innerHTML += `<br>Auth: ${services.auth ? '✅' : '❌'}`;
         
         // Load admin status and basic data in parallel for better performance
-        debugDiv.innerHTML += '<br>📊 Loading data...';
+        debugDiv.innerHTML += '<br>📊 Loading dashboard data...';
         const [adminStatus] = await Promise.all([
             checkAdminStatus(),
             loadBasicDashboardData() // Start loading basic data immediately
         ]);
         
-        debugDiv.innerHTML += '<br>✅ Data loaded!';
+        debugDiv.innerHTML += '<br>✅ Dashboard data loaded!';
         console.log('✅ Dashboard: Initialization complete');
         
         // Setup logout functionality
@@ -76,57 +73,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Wait for Firebase to be ready (optimized)
-async function waitForFirebaseReady() {
-    return new Promise((resolve, reject) => {
-        let attempts = 0;
-        const maxAttempts = 100; // Increased timeout for Vercel deployment
-        
-        const checkFirebase = () => {
-            attempts++;
-            
-            console.log(`🔍 Dashboard: Firebase check attempt ${attempts}/${maxAttempts}:`, {
-                firebase: typeof firebase,
-                apps: typeof firebase !== 'undefined' ? firebase.apps?.length : 'N/A',
-                db: !!window.db,
-                auth: !!window.auth,
-                config: !!window.firebaseConfig
-            });
-            
-            // Check each condition separately
-            if (typeof firebase === 'undefined') {
-                console.log('⏳ Dashboard: Waiting for Firebase library...');
-            } else if (!firebase.apps || firebase.apps.length === 0) {
-                console.log('⏳ Dashboard: Waiting for Firebase app initialization...');
-            } else if (!window.db) {
-                console.log('⏳ Dashboard: Waiting for Firestore (db)...');
-            } else if (!window.auth) {
-                console.log('⏳ Dashboard: Waiting for Firebase Auth...');
-            } else {
-                console.log('✅ Dashboard: All Firebase services ready!');
-                resolve();
-                return;
-            }
-            
-            if (attempts >= maxAttempts) {
-                const errorDetails = {
-                    firebase: typeof firebase,
-                    apps: typeof firebase !== 'undefined' ? firebase.apps?.length : 'N/A',
-                    db: !!window.db,
-                    auth: !!window.auth,
-                    config: !!window.firebaseConfig
-                };
-                console.error('❌ Dashboard: Firebase timeout details:', errorDetails);
-                reject(new Error(`Firebase initialization timeout after ${maxAttempts} attempts. Details: ${JSON.stringify(errorDetails)}`));
-                return;
-            }
-            
-            setTimeout(checkFirebase, 200); // Increased interval for Vercel
-        };
-        
-        checkFirebase();
-    });
-}
+// Firebase initialization is now handled by FirebaseManager
+// This function is no longer needed
 
 // OPTIMIZED: Simplified admin status check
 async function checkAdminStatus() {

@@ -113,16 +113,21 @@
     <!-- Load Font Awesome with defer for better performance -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" media="print" onload="this.media='all'">
     
-    <!-- CRITICAL: Only absolutely essential scripts in head -->
-    <!-- Production logging system (must load first) -->
+    <!-- CRITICAL: Firebase SDK must load first (synchronously) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
+    <!-- Firebase configuration and initialization -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-manager.js"></script>
+    
+    <!-- Essential utilities -->
     <script src="logger.js"></script>
-    <!-- Debug utilities -->
     <script src="debug-utils.js"></script>
-    <!-- Application Constants -->
     <script src="constants.js"></script>
-    <!-- iPad Enhancement Utilities -->
     <script src="ipad-enhancements.js"></script>
-    <!-- Page Protection will load after Firebase initialization -->
     
     <!-- Preload critical scripts for better performance -->
     <link rel="preload" href="device-utils.js" as="script">
@@ -626,12 +631,11 @@
     <script src="cache-manager.js" defer></script>
     <script src="realtime-manager.js" defer></script>
     
-    <!-- Core app scripts - Order matters here (NO DEFER for Firebase to ensure proper loading order) -->
-    <script src="firebase-config.js"></script>
+    <!-- Core app scripts - Firebase now handled by firebase-manager.js -->
     <script src="clear-cache.js"></script>
-    <script src="firebase-app.js"></script>
     <!-- TEMPORARY: Auth disabled for testing -->
     <!-- <script src="vercel-auth.js" defer></script> -->
+    <!-- Note: auth-guard.js will be updated to use FirebaseManager -->
     <script src="auth-guard.js" defer></script>
     
     <!-- UI and functionality scripts -->
