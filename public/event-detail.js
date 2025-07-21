@@ -313,13 +313,19 @@ async function loadParticipantAvatarsAsync(participants) {
 
         const avatarResults = await Promise.all(avatarPromises);
         
-        // Mettre à jour les avatars dans le DOM
+        // Mettre à jour les avatars dans le DOM avec système robuste
         avatarResults.forEach(result => {
             const participantCard = document.querySelector(`[data-lifras-id="${result.lifrasID}"]`);
             if (participantCard) {
                 const avatarImg = participantCard.querySelector('.participant-avatar img');
-                if (avatarImg) {
-                    avatarImg.src = result.photoURL;
+                if (avatarImg && window.AvatarUtils) {
+                    // Update with robust system
+                    window.AvatarUtils.setupRobustAvatar(avatarImg, result.photoURL, result.lifrasID, {
+                        showLoading: false
+                    });
+                } else if (avatarImg) {
+                    // Fallback
+                    avatarImg.src = result.photoURL || '/avatars/default-avatar.svg';
                 }
             }
         });
@@ -355,13 +361,19 @@ async function loadMemberAvatarsAsync(members) {
 
         const avatarResults = await Promise.all(avatarPromises);
         
-        // Mettre à jour les avatars dans le DOM
+        // Mettre à jour les avatars dans le DOM avec système robuste
         avatarResults.forEach(result => {
             const memberCard = document.querySelector(`[data-lifras-id-member="${result.lifrasID}"]`);
             if (memberCard) {
                 const avatarImg = memberCard.querySelector('.member-avatar img');
-                if (avatarImg) {
-                    avatarImg.src = result.photoURL;
+                if (avatarImg && window.AvatarUtils) {
+                    // Update with robust system
+                    window.AvatarUtils.setupRobustAvatar(avatarImg, result.photoURL, result.lifrasID, {
+                        showLoading: false
+                    });
+                } else if (avatarImg) {
+                    // Fallback
+                    avatarImg.src = result.photoURL || '/avatars/default-avatar.svg';
                 }
             }
         });
@@ -541,9 +553,8 @@ function displayParticipants(participants) {
         
         // Utiliser le système robuste d'avatar si disponible
         if (window.AvatarUtils) {
-            // Récupérer l'URL de l'avatar depuis les données si disponible
-            const primaryUrl = participantAvatars.find(a => a.lifrasID === participant.lifrasID)?.photoURL;
-            window.AvatarUtils.setupRobustAvatar(avatarImg, primaryUrl, participant.lifrasID, {
+            // Initial display with default avatar, will be updated by loadParticipantAvatarsAsync
+            window.AvatarUtils.setupRobustAvatar(avatarImg, null, participant.lifrasID, {
                 showLoading: false,
                 onFallback: () => console.log(`🔄 Participant avatar fallback for ${participant.lifrasID}`)
             });
@@ -604,9 +615,8 @@ function displayMembers(members) {
         
         // Utiliser le système robuste d'avatar si disponible
         if (window.AvatarUtils) {
-            // Récupérer l'URL de l'avatar depuis les données si disponible
-            const primaryUrl = memberAvatars.find(a => a.lifrasID === member.lifrasID)?.photoURL;
-            window.AvatarUtils.setupRobustAvatar(avatarImg, primaryUrl, member.lifrasID, {
+            // Initial display with default avatar, will be updated by loadMemberAvatarsAsync
+            window.AvatarUtils.setupRobustAvatar(avatarImg, null, member.lifrasID, {
                 showLoading: false,
                 onFallback: () => console.log(`🔄 Member avatar fallback for ${member.lifrasID}`)
             });
