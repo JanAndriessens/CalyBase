@@ -171,19 +171,31 @@ class MemberPermissions {
                     canImportMembers: true,
                     canDeleteMembers: true,
                     canModifyMembers: true,
-                    canViewMembers: true
+                    canViewMembers: true,
+                    canManageMemberAvatars: true,
+                    canViewMemberDetails: true,
+                    canCreateMembers: true,
+                    canBulkDeleteMembers: true
                 },
                 moderator: {
                     canImportMembers: true,
                     canDeleteMembers: false,
                     canModifyMembers: true,
-                    canViewMembers: true
+                    canViewMembers: true,
+                    canManageMemberAvatars: true,
+                    canViewMemberDetails: true,
+                    canCreateMembers: true,
+                    canBulkDeleteMembers: false
                 },
                 user: {
                     canImportMembers: false,
                     canDeleteMembers: false,
                     canModifyMembers: false,
-                    canViewMembers: true
+                    canViewMembers: true,
+                    canManageMemberAvatars: false,
+                    canViewMemberDetails: false,
+                    canCreateMembers: false,
+                    canBulkDeleteMembers: false
                 }
             }
         };
