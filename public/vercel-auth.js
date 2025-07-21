@@ -3,6 +3,37 @@
 
 console.log('🔧 Vercel Auth: Initializing client-side authentication...');
 
+// Ensure we wait for DOM to be completely ready
+function waitForDOM() {
+    return new Promise((resolve) => {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            resolve();
+        } else {
+            document.addEventListener('DOMContentLoaded', resolve);
+        }
+    });
+}
+
+// Ensure Firebase is loaded
+function waitForFirebase() {
+    return new Promise((resolve) => {
+        let attempts = 0;
+        const checkFirebase = () => {
+            attempts++;
+            if (window.firebase && window.firebaseConfig && typeof window.firebase.auth === 'function') {
+                console.log('✅ Firebase ready after', attempts, 'attempts');
+                resolve();
+            } else if (attempts > 100) { // 10 seconds timeout
+                console.log('⏰ Firebase timeout after 10 seconds');
+                resolve(); // Continue anyway
+            } else {
+                setTimeout(checkFirebase, 100);
+            }
+        };
+        checkFirebase();
+    });
+}
+
 // Simple Firebase Auth check without complex session management
 window.vercelAuth = {
     async checkAuth() {
@@ -87,53 +118,65 @@ if (isProtectedPage) {
     document.documentElement.style.visibility = 'hidden';
     document.documentElement.style.opacity = '0';
     
-    // Simple loading indicator
-    const overlay = document.createElement('div');
-    overlay.id = 'securityOverlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 999999;
-        color: white;
-        font-family: Arial, sans-serif;
-    `;
-    overlay.innerHTML = `
-        <div style="text-align: center;">
-            <div style="font-size: 24px; margin-bottom: 20px;">🔐 CalyBase</div>
-            <div style="opacity: 0.8;">Vérification de l'authentification...</div>
-        </div>
-    `;
-    
-    // Wait for DOM to be ready before adding overlay
-    if (document.body) {
-        document.body.appendChild(overlay);
-    } else {
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.appendChild(overlay);
-        });
-    }
-    
-    // Check authentication once DOM is ready
-    const runAuthCheck = () => {
-        window.vercelAuth.checkAuth().then(result => {
+    // Initialize protection once everything is ready
+    async function initializeProtection() {
+        try {
+            console.log('⏳ Waiting for DOM and Firebase...');
+            
+            // Wait for both DOM and Firebase to be ready
+            await Promise.all([waitForDOM(), waitForFirebase()]);
+            
+            console.log('✅ DOM and Firebase ready, creating overlay...');
+            
+            // Create loading overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'securityOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 999999;
+                color: white;
+                font-family: Arial, sans-serif;
+            `;
+            overlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 20px;">🔐 CalyBase</div>
+                    <div style="opacity: 0.8;">Vérification de l'authentification...</div>
+                </div>
+            `;
+            
+            // Safely add to DOM
+            if (document.body) {
+                document.body.appendChild(overlay);
+                console.log('✅ Overlay added to DOM');
+            }
+            
+            // Check authentication
+            console.log('🔍 Starting authentication check...');
+            const result = await window.vercelAuth.checkAuth();
+            
             if (result.authenticated) {
+                console.log('✅ Authentication successful');
                 window.vercelAuth.allowAccess();
             } else {
+                console.log('❌ Authentication failed, redirecting to login');
                 window.vercelAuth.redirectToLogin();
             }
-        });
-    };
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', runAuthCheck);
-    } else {
-        runAuthCheck();
+            
+        } catch (error) {
+            console.error('❌ Protection initialization error:', error);
+            // On error, redirect to login as fallback
+            window.location.href = '/login.html?security=vercel_auth_error';
+        }
     }
+    
+    // Start initialization
+    initializeProtection();
 }
