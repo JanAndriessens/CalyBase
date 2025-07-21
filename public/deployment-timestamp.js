@@ -1,16 +1,16 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit MEMBERS-DEBUG');
-console.log('✅ LATEST DEPLOYMENT: Added comprehensive debugging to event-detail.js loadMembers');
-console.log('🎯 IF YOU SEE THIS: Debug logging active for member loading issues!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit ADMIN-DASHBOARD-FIX');
+console.log('✅ LATEST DEPLOYMENT: Fixed admin user management dashboard - using index.js');
+console.log('🎯 IF YOU SEE THIS: Admin dashboard with index.js should be active!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'MEMBERS-DEBUG',
+    commit: 'ADMIN-DASHBOARD-FIX',
     timestamp: new Date().toISOString(),
-    approach: 'Added comprehensive debugging to diagnose member loading failures',
+    approach: 'Fixed admin user management dashboard - replaced dashboard.js with index.js',
     expectedLogs: [
-        '🎯 Debug logging active for member loading issues!',
-        '🔍 [MEMBERS DEBUG] Starting loadMembers function',
-        '✅ [DISPLAY DEBUG] Successfully created X member cards'
+        '🎯 Admin dashboard with index.js should be active!',
+        '👑 Dashboard: Admin email recognized (hardcoded list)',
+        '✅ Dashboard: Admin access granted'
     ]
 };
