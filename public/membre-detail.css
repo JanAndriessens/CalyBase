@@ -100,7 +100,6 @@ header h1 {
 }
 
 .upload-button:hover, .remove-button:hover {
-    transform: scale(1.1);
     color: #357abd;
 }
 
