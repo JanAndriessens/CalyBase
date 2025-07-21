@@ -120,17 +120,13 @@
         console.log('📅 Deployment timestamp:', new Date().toISOString());
     </script>
     
-    <!-- CRITICAL: Firebase SDK must load first (synchronously) -->
+    <!-- CRITICAL: Firebase Config (MUST load first) - COPIED FROM WORKING MEMBRES.HTML -->
+    <script src="firebase-config.js"></script>
+    <!-- Firebase SDK - EXACT SAME AS MEMBRES.HTML -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script>console.log('🔥 Firebase App SDK loaded:', typeof firebase);</script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    <script>console.log('🔥 All Firebase SDK components loaded');</script>
-    
-    <!-- Firebase configuration and initialization -->
-    <script src="firebase-config.js"></script>
-    <script src="firebase-manager.js"></script>
     
     <!-- Essential utilities -->
     <script src="logger.js"></script>
@@ -640,8 +636,10 @@
     <script src="cache-manager.js" defer></script>
     <script src="realtime-manager.js" defer></script>
     
-    <!-- Core app scripts - Firebase now handled by firebase-manager.js -->
+    <!-- Core app scripts - COPIED FROM WORKING MEMBRES.HTML -->
     <script src="clear-cache.js"></script>
+    <script src="firebase-app.js"></script>
+    <script src="system-config.js"></script>
     <!-- TEMPORARY: Auth disabled for testing -->
     <!-- <script src="vercel-auth.js" defer></script> -->
     <!-- Note: auth-guard.js will be updated to use FirebaseManager -->
@@ -655,11 +653,8 @@
     <!-- iPad touch enhancements -->
     <script src="table-touch-enhancements.js" defer></script>
     
-    <!-- EMERGENCY: Backup dashboard initialization -->
-    <script src="emergency-dashboard-fix.js"></script>
-    
-    <!-- Main application script (load after FirebaseManager is ready) -->
-    <script src="index.js"></script>
+    <!-- Simple dashboard script - SAME PATTERN AS MEMBRES.JS -->
+    <script src="dashboard.js"></script>
     
     <!-- EMERGENCY DEBUG: Direct console logging bypassing all other scripts -->
     <script>
