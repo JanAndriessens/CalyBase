@@ -101,6 +101,8 @@ header h1 {
 
 .upload-button:hover, .remove-button:hover {
     color: #357abd;
+    transform: none !important;
+    background: none !important;
 }
 
 .remove-button {
@@ -109,6 +111,8 @@ header h1 {
 
 .remove-button:hover {
     color: #c82333;
+    transform: none !important;
+    background: none !important;
 }
 
 /* Details grid styling */
