@@ -88,7 +88,7 @@ class MemberPermissions {
             await this.initialize();
         }
         
-        await this.waitForConfig();  // NEW: Ensure config is loaded
+        // Ensure config is loaded (already handled in initialize)
         
         console.log(`🔍 Checking permission '${permission}' for role '${this.userRole}'`);
         console.log(`🔍 System config available: ${!!this.systemConfig}`);
@@ -141,13 +141,19 @@ class MemberPermissions {
             
             // Fallback: Load directly from Firestore
             console.log('⚙️ Loading system config directly from Firestore...');
-            const configDoc = await firebase.firestore().collection('system').doc('config').get();
-            
-            if (configDoc.exists) {
-                this.systemConfig = configDoc.data();
-                console.log('✅ System config loaded from Firestore');
-            } else {
-                console.log('⚠️ No system config found, using default');
+            try {
+                const configDoc = await firebase.firestore().collection('system').doc('config').get();
+                
+                if (configDoc.exists) {
+                    this.systemConfig = configDoc.data();
+                    console.log('✅ System config loaded from Firestore');
+                } else {
+                    console.log('⚠️ No system config found, using default');
+                    this.systemConfig = this.getDefaultConfig();
+                }
+            } catch (firestoreError) {
+                console.log('⚠️ Cannot access system config in Firestore (permissions), using default');
+                console.log('📝 Firestore error:', firestoreError.message);
                 this.systemConfig = this.getDefaultConfig();
             }
         } catch (error) {
