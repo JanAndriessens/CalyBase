@@ -1,7 +1,7 @@
 // Enhanced Service Worker for CalyBase
 // Intelligent caching, background sync, and offline capabilities
 
-const CACHE_VERSION = 'calybase-v2.0.0';
+const CACHE_VERSION = 'calybase-v2.1.0';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -30,7 +30,7 @@ const STATIC_ASSETS = [
     '/navigation.js',
     '/auth-guard.js',
     '/firebase-config.js',
-    '/firebase-v9.js',
+    // '/firebase-v9.js', // DISABLED: Conflicts with Firebase v8
     '/table-touch-enhancements.js'
 ];
 
