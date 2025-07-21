@@ -152,3 +152,69 @@
 ---
 
 **Implementation Completed**: All planned iPad compatibility optimizations have been successfully implemented following the simple, modular approach outlined in CLAUDE.md. Ready for testing and deployment.
+
+---
+
+## 🔧 GitHub/Vercel Deployment Pipeline Fix - In Progress
+
+### Issue Identified: July 20, 2025
+- **Problem**: Member detail buttons not visible on live site due to deployment pipeline issues
+- **Root Cause**: GitHub repository mismatch - Vercel watching different repo than local development
+- **Status**: Member button fixes completed locally, deployment pipeline needs reconnection
+
+### ✅ Code Fixes Completed:
+- [x] **Fixed member detail button visibility issues**
+  - Removed permission timeout problems causing buttons to be hidden
+  - Added timeout protection for edit permission checks (2-second limit)
+  - Ensured view (Détails) buttons are always visible regardless of permission system status
+  - Edit (Modifier) buttons only show when permissions are successfully granted
+  
+- [x] **Enhanced permission error handling**
+  - Added graceful fallbacks for permission system timeouts
+  - Improved debugging with detailed console logging
+  - Protected against Firebase initialization delays
+
+### 📋 Deployment Pipeline Setup - Tomorrow's Tasks:
+
+#### **Current Status:**
+- Local repository: `/Users/jan/Documents/GitHub/CalyBase`
+- Vercel project: `vercel.com/h2m/caly-base` (project ID: `prj_lEeGELeI6rlFWYyF1NVMNEcsDSWa`)
+- All code changes committed locally and ready to deploy
+
+#### **Next Steps for GitHub Desktop + Vercel Setup:**
+
+1. **Add Existing Project to GitHub Desktop**
+   - Open GitHub Desktop
+   - Add existing repository: `/Users/jan/Documents/GitHub/CalyBase`
+   - Verify all recent commits are visible
+
+2. **Publish Repository to GitHub**
+   - Click "Publish repository" in GitHub Desktop
+   - Name: `CalyBase`
+   - Description: `CalyBase project with Firebase integration`
+   - Make it **public** (uncheck "Keep code private")
+   - Use personal account (not h2m-ai organization)
+
+3. **Update Vercel Configuration**
+   - Go to Vercel dashboard: `vercel.com/h2m/caly-base`
+   - Settings → Git → Disconnect current repository
+   - Connect to the new GitHub repository created above
+   - Ensure watching `main` branch
+
+4. **Test Deployment Pipeline**
+   - Make a small test change
+   - Commit via GitHub Desktop
+   - Verify Vercel auto-deploys
+   - Check live site for member detail buttons
+
+#### **Expected Outcome:**
+- ✅ Member detail buttons visible on https://caly-base.vercel.app/membres.html
+- ✅ Smooth workflow: Edit → Commit via GitHub Desktop → Auto-deploy via Vercel
+- ✅ No more deployment pipeline issues
+
+### 🎯 **End Goal:**
+Complete GitHub Desktop + Vercel integration allowing easy visual commits and automatic deployments, with member detail button functionality restored on the live site.
+
+---
+
+**Updated**: July 20, 2025 - Ready to continue deployment pipeline setup tomorrow
