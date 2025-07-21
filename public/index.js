@@ -35,6 +35,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         
     } catch (error) {
         console.error('❌ Dashboard: Error during initialization:', error);
+        console.error('❌ Dashboard: Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
         showErrorMessage('Erreur lors du chargement du tableau de bord');
     }
 });
