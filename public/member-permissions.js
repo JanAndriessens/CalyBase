@@ -46,7 +46,7 @@ class MemberPermissions {
             console.log('👑 User role assigned:', this.userRole);
             
             console.log('⚙️ Getting system configuration...');
-            await this.waitForConfig();
+            await this.loadSystemConfig();
             console.log('⚙️ System config loaded:', !!this.systemConfig);
             
             if (this.systemConfig && this.systemConfig.permissions) {
@@ -128,16 +128,59 @@ class MemberPermissions {
         return false;
     }
 
-    // Add this new method after the class definition
-    async waitForConfig(timeout = 5000) {
-        const start = Date.now();
-        while (!this.systemConfig && Date.now() - start < timeout) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+    // Load system configuration from global SystemConfig or default
+    async loadSystemConfig() {
+        try {
+            // Try to get from global SystemConfig if available
+            if (window.SystemConfig && window.SystemConfig.getConfig) {
+                console.log('⚙️ Loading system config from SystemConfig...');
+                this.systemConfig = await window.SystemConfig.getConfig();
+                console.log('✅ System config loaded from SystemConfig');
+                return;
+            }
+            
+            // Fallback: Load directly from Firestore
+            console.log('⚙️ Loading system config directly from Firestore...');
+            const configDoc = await firebase.firestore().collection('system').doc('config').get();
+            
+            if (configDoc.exists) {
+                this.systemConfig = configDoc.data();
+                console.log('✅ System config loaded from Firestore');
+            } else {
+                console.log('⚠️ No system config found, using default');
+                this.systemConfig = this.getDefaultConfig();
+            }
+        } catch (error) {
+            console.error('❌ Error loading system config:', error);
+            console.log('🔄 Using default system config');
+            this.systemConfig = this.getDefaultConfig();
         }
-        if (!this.systemConfig) {
-            throw new Error('System config timeout');
-        }
-        return this.systemConfig;
+    }
+    
+    // Get default configuration if system config fails to load
+    getDefaultConfig() {
+        return {
+            permissions: {
+                admin: {
+                    canImportMembers: true,
+                    canDeleteMembers: true,
+                    canModifyMembers: true,
+                    canViewMembers: true
+                },
+                moderator: {
+                    canImportMembers: true,
+                    canDeleteMembers: false,
+                    canModifyMembers: true,
+                    canViewMembers: true
+                },
+                user: {
+                    canImportMembers: false,
+                    canDeleteMembers: false,
+                    canModifyMembers: false,
+                    canViewMembers: true
+                }
+            }
+        };
     }
 
     // Check if user can delete members
