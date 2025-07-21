@@ -1,15 +1,15 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit 6e249d1');
-console.log('✅ LATEST DEPLOYMENT: Fixed avatar button hover effect');
-console.log('🎯 IF YOU SEE THIS: Avatar button scaling fix deployed!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit 0bcc808');
+console.log('✅ LATEST DEPLOYMENT: Avatar button hover fix verification');
+console.log('🎯 IF YOU SEE THIS: Vercel deployment pipeline working!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: '6e249d1',
+    commit: '0bcc808',
     timestamp: new Date().toISOString(),
-    approach: 'Fixed avatar button hover scaling',
+    approach: 'Force Vercel deployment verification',
     expectedLogs: [
-        '🎯 Avatar button scaling fix deployed!',
-        'Avatar buttons no longer scale on hover'
+        '🎯 Vercel deployment pipeline working!',
+        'Avatar buttons fixed - no more ugly scaling'
     ]
 };
