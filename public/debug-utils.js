@@ -49,7 +49,8 @@
     };
 
     // Legacy console replacement for gradual migration
-    if (!isDevelopment()) {
+    // TEMPORARILY DISABLED: Allow full error messages for debugging dashboard issue
+    if (false && !isDevelopment()) {
         // In production, replace console methods with no-ops except for errors
         const originalConsole = { ...console };
         console.log = () => {};
