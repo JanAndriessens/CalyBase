@@ -645,6 +645,34 @@
     <!-- Main application script (load last) -->
     <script src="index.js" defer></script>
     
+    <!-- EMERGENCY DEBUG: Direct console logging bypassing all other scripts -->
+    <script>
+        console.log('🚨 EMERGENCY DEBUG: Starting direct diagnosis...');
+        
+        // Check if basic globals are available
+        setTimeout(() => {
+            console.log('🔍 EMERGENCY DEBUG: Checking basic availability...');
+            console.log('- window.firebase:', typeof window.firebase);
+            console.log('- window.db:', typeof window.db);
+            console.log('- window.auth:', typeof window.auth);
+            console.log('- window.firebaseConfig:', typeof window.firebaseConfig);
+            
+            // Try a simple database test
+            if (window.db) {
+                console.log('📊 EMERGENCY DEBUG: Testing database connection...');
+                window.db.collection('membres').limit(1).get()
+                    .then(snapshot => {
+                        console.log('✅ EMERGENCY DEBUG: Database works! Size:', snapshot.size);
+                    })
+                    .catch(error => {
+                        console.error('❌ EMERGENCY DEBUG: Database error:', error);
+                    });
+            } else {
+                console.error('❌ EMERGENCY DEBUG: No database available');
+            }
+        }, 5000);
+    </script>
+
     <!-- Enhanced Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
