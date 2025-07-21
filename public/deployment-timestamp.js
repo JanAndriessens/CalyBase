@@ -1,16 +1,15 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit d173ca3');
-console.log('✅ LATEST DEPLOYMENT: Dashboard using membres.html Firebase approach');
-console.log('🎯 IF YOU SEE THIS: Latest code successfully deployed!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit 6e249d1');
+console.log('✅ LATEST DEPLOYMENT: Fixed avatar button hover effect');
+console.log('🎯 IF YOU SEE THIS: Avatar button scaling fix deployed!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'd173ca3',
+    commit: '6e249d1',
     timestamp: new Date().toISOString(),
-    approach: 'membres.html Firebase pattern',
+    approach: 'Fixed avatar button hover scaling',
     expectedLogs: [
-        '📊 Dashboard: Starting initialization...',
-        '📊 Dashboard: DOM loaded, waiting for Firebase...',
-        '📊 Dashboard: Firebase services ready, loading data...'
+        '🎯 Avatar button scaling fix deployed!',
+        'Avatar buttons no longer scale on hover'
     ]
 };
