@@ -1,8 +1,10 @@
 // Debug utilities for CalyBase
-// Conditional logging that can be disabled in production
+// DEBUGGING MODE ACTIVE - Full console logging enabled for Firebase troubleshooting
 
 (function() {
     'use strict';
+
+    console.log('🔧 DEBUG-UTILS: Full console logging mode active for Firebase debugging');
 
     // Check if we're in development mode
     const isDevelopment = () => {
@@ -14,53 +16,26 @@
     // Debug logger that only logs in development
     window.DebugLogger = {
         log: (...args) => {
-            if (isDevelopment()) {
-                console.log(...args);
-            }
+            console.log('[DebugLogger]', ...args);
         },
         warn: (...args) => {
-            if (isDevelopment()) {
-                console.warn(...args);
-            }
+            console.warn('[DebugLogger]', ...args);
         },
         error: (...args) => {
-            // Always log errors, but with less detail in production
-            if (isDevelopment()) {
-                console.error(...args);
-            } else {
-                console.error('An error occurred. Enable debug mode for details.');
-            }
+            console.error('[DebugLogger]', ...args);
         },
         info: (...args) => {
-            if (isDevelopment()) {
-                console.info(...args);
-            }
+            console.info('[DebugLogger]', ...args);
         },
         group: (...args) => {
-            if (isDevelopment()) {
-                console.group(...args);
-            }
+            console.group('[DebugLogger]', ...args);
         },
         groupEnd: () => {
-            if (isDevelopment()) {
-                console.groupEnd();
-            }
+            console.groupEnd();
         }
     };
 
-    // Legacy console replacement for gradual migration
-    // TEMPORARILY DISABLED: Allow full error messages for debugging dashboard issue
-    if (false && !isDevelopment()) {
-        // In production, replace console methods with no-ops except for errors
-        const originalConsole = { ...console };
-        console.log = () => {};
-        console.info = () => {};
-        console.warn = () => {};
-        console.group = () => {};
-        console.groupEnd = () => {};
-        // Keep error but make it less verbose
-        console.error = (...args) => {
-            originalConsole.error('Error occurred:', args[0]?.message || 'Unknown error');
-        };
-    }
+    // CONSOLE OVERRIDE COMPLETELY DISABLED FOR DEBUGGING
+    console.log('✅ DEBUG-UTILS: Console override disabled - all errors will be visible');
+
 })();
