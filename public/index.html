@@ -626,10 +626,10 @@
     <script src="cache-manager.js" defer></script>
     <script src="realtime-manager.js" defer></script>
     
-    <!-- Core app scripts - Order matters here -->
-    <script src="firebase-config.js" defer></script>
-    <script src="clear-cache.js" defer></script>
-    <script src="firebase-app.js" defer></script>
+    <!-- Core app scripts - Order matters here (NO DEFER for Firebase to ensure proper loading order) -->
+    <script src="firebase-config.js"></script>
+    <script src="clear-cache.js"></script>
+    <script src="firebase-app.js"></script>
     <!-- TEMPORARY: Auth disabled for testing -->
     <!-- <script src="vercel-auth.js" defer></script> -->
     <script src="auth-guard.js" defer></script>

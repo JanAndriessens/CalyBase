@@ -80,27 +80,48 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function waitForFirebaseReady() {
     return new Promise((resolve, reject) => {
         let attempts = 0;
-        const maxAttempts = 30; // Reduced from 50
+        const maxAttempts = 100; // Increased timeout for Vercel deployment
         
         const checkFirebase = () => {
             attempts++;
             
-            if (typeof firebase !== 'undefined' && 
-                firebase.apps && 
-                firebase.apps.length > 0 && 
-                window.db && 
-                window.auth) {
-                console.log('✅ Dashboard: Firebase services ready');
+            console.log(`🔍 Dashboard: Firebase check attempt ${attempts}/${maxAttempts}:`, {
+                firebase: typeof firebase,
+                apps: typeof firebase !== 'undefined' ? firebase.apps?.length : 'N/A',
+                db: !!window.db,
+                auth: !!window.auth,
+                config: !!window.firebaseConfig
+            });
+            
+            // Check each condition separately
+            if (typeof firebase === 'undefined') {
+                console.log('⏳ Dashboard: Waiting for Firebase library...');
+            } else if (!firebase.apps || firebase.apps.length === 0) {
+                console.log('⏳ Dashboard: Waiting for Firebase app initialization...');
+            } else if (!window.db) {
+                console.log('⏳ Dashboard: Waiting for Firestore (db)...');
+            } else if (!window.auth) {
+                console.log('⏳ Dashboard: Waiting for Firebase Auth...');
+            } else {
+                console.log('✅ Dashboard: All Firebase services ready!');
                 resolve();
                 return;
             }
             
             if (attempts >= maxAttempts) {
-                reject(new Error('Firebase initialization timeout'));
+                const errorDetails = {
+                    firebase: typeof firebase,
+                    apps: typeof firebase !== 'undefined' ? firebase.apps?.length : 'N/A',
+                    db: !!window.db,
+                    auth: !!window.auth,
+                    config: !!window.firebaseConfig
+                };
+                console.error('❌ Dashboard: Firebase timeout details:', errorDetails);
+                reject(new Error(`Firebase initialization timeout after ${maxAttempts} attempts. Details: ${JSON.stringify(errorDetails)}`));
                 return;
             }
             
-            setTimeout(checkFirebase, 100);
+            setTimeout(checkFirebase, 200); // Increased interval for Vercel
         };
         
         checkFirebase();
