@@ -13,7 +13,15 @@ let dashboardData = {
 };
 
 // Initialize dashboard when Firebase is ready
-window.FirebaseManager.onReady(async (services) => {
+function initializeDashboard() {
+    if (typeof window.FirebaseManager === 'undefined') {
+        console.error('❌ Dashboard: FirebaseManager not available, retrying in 500ms...');
+        setTimeout(initializeDashboard, 500);
+        return;
+    }
+    
+    console.log('🎯 Dashboard: FirebaseManager found, setting up callback...');
+    window.FirebaseManager.onReady(async (services) => {
     try {
         console.log('🎯 Dashboard: Firebase is ready, initializing dashboard...');
         
@@ -71,7 +79,11 @@ window.FirebaseManager.onReady(async (services) => {
         
         showErrorMessage('Erreur lors du chargement du tableau de bord');
     }
-});
+    });
+}
+
+// Start dashboard initialization
+initializeDashboard();
 
 // Firebase initialization is now handled by FirebaseManager
 // This function is no longer needed
