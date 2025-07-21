@@ -13,13 +13,13 @@
     <script src="error-handler.js"></script>
     <!-- CRITICAL: Firebase Config (MUST load first) -->
     <script src="firebase-config.js"></script>
-    <!-- CRITICAL: Page Protection (loads after config) -->
-    <script src="vercel-auth.js"></script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <!-- CRITICAL: Page Protection (loads after Firebase SDK) -->
+    <script src="vercel-auth.js" defer></script>
     <!-- SheetJS pour la lecture des fichiers Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Encoding.js pour la gestion des caractères spéciaux -->

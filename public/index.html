@@ -122,8 +122,7 @@
     <script src="constants.js"></script>
     <!-- iPad Enhancement Utilities -->
     <script src="ipad-enhancements.js"></script>
-    <!-- CRITICAL: Page Protection (MUST load early for security) -->
-    <script src="vercel-auth.js"></script>
+    <!-- Page Protection will load after Firebase initialization -->
     
     <!-- Preload critical scripts for better performance -->
     <link rel="preload" href="device-utils.js" as="script">
@@ -630,6 +629,8 @@
     <script src="firebase-config.js" defer></script>
     <script src="clear-cache.js" defer></script>
     <script src="firebase-app.js" defer></script>
+    <!-- CRITICAL: Page Protection (loads after Firebase is ready) -->
+    <script src="vercel-auth.js" defer></script>
     <script src="auth-guard.js" defer></script>
     
     <!-- UI and functionality scripts -->
