@@ -756,15 +756,32 @@ async function loadMemberAvatarsAsync(members) {
         // ⚡ Update DOM in batches to avoid blocking
         let processed = 0;
         const updateAvatars = () => {
-            const batchSize = 20;
+            const batchSize = 5; // Smaller batches for robust avatar loading
             const endIndex = Math.min(processed + batchSize, members.length);
             
             for (let i = processed; i < endIndex; i++) {
                 const member = members[i];
                 const avatarImg = document.querySelector(`img[data-lifras-id="${member.lifrasID || ''}"]`);
                 if (avatarImg) {
-                    const photoURL = avatarMap.get(member.lifrasID) || '/avatars/default-avatar.svg';
-                    avatarImg.src = photoURL;
+                    const primaryUrl = avatarMap.get(member.lifrasID);
+                    
+                    // Use robust avatar system if available
+                    if (window.AvatarUtils) {
+                        window.AvatarUtils.setupRobustAvatar(avatarImg, primaryUrl, member.lifrasID, {
+                            showLoading: false,
+                            onSuccess: (finalUrl) => {
+                                // Reduced logging to avoid spam
+                                if (Math.random() < 0.1) console.log(`✅ Table avatar sample: ${member.lifrasID}`);
+                            },
+                            onFallback: () => {
+                                console.log(`🔄 Table avatar fallback: ${member.lifrasID}`);
+                            }
+                        });
+                    } else {
+                        // Basic fallback if AvatarUtils not available
+                        const photoURL = primaryUrl || '/avatars/default-avatar.svg';
+                        avatarImg.src = photoURL;
+                    }
                 }
             }
             
@@ -782,11 +799,17 @@ async function loadMemberAvatarsAsync(members) {
         
     } catch (error) {
         console.error('❌ Error loading member avatars:', error);
-        // Fallback: Set all to default avatars
+        // Fallback: Set all to default avatars using robust system
         members.forEach(member => {
             const avatarImg = document.querySelector(`img[data-lifras-id="${member.lifrasID || ''}"]`);
             if (avatarImg) {
-                avatarImg.src = '/avatars/default-avatar.svg';
+                if (window.AvatarUtils) {
+                    window.AvatarUtils.setupRobustAvatar(avatarImg, null, member.lifrasID, {
+                        showLoading: false
+                    });
+                } else {
+                    avatarImg.src = '/avatars/default-avatar.svg';
+                }
             }
         });
     }
