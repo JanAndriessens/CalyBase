@@ -110,14 +110,30 @@ if (isProtectedPage) {
             <div style="opacity: 0.8;">Vérification de l'authentification...</div>
         </div>
     `;
-    document.body.appendChild(overlay);
     
-    // Check authentication
-    window.vercelAuth.checkAuth().then(result => {
-        if (result.authenticated) {
-            window.vercelAuth.allowAccess();
-        } else {
-            window.vercelAuth.redirectToLogin();
-        }
-    });
+    // Wait for DOM to be ready before adding overlay
+    if (document.body) {
+        document.body.appendChild(overlay);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.appendChild(overlay);
+        });
+    }
+    
+    // Check authentication once DOM is ready
+    const runAuthCheck = () => {
+        window.vercelAuth.checkAuth().then(result => {
+            if (result.authenticated) {
+                window.vercelAuth.allowAccess();
+            } else {
+                window.vercelAuth.redirectToLogin();
+            }
+        });
+    };
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runAuthCheck);
+    } else {
+        runAuthCheck();
+    }
 }
