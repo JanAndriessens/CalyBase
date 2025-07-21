@@ -171,11 +171,21 @@ async function loadBasicDashboardData() {
 // Get total members count (optimized)
 async function getMembersCount() {
     try {
+        console.log('🔍 Dashboard: Getting members count...');
+        console.log('🔍 Dashboard: window.db available:', !!window.db);
+        
+        if (!window.db) {
+            console.error('❌ Dashboard: window.db is not available');
+            return 0;
+        }
+        
         // Use aggregation query for better performance if available
         const snapshot = await window.db.collection('membres').get();
+        console.log('✅ Dashboard: Members count retrieved:', snapshot.size);
         return snapshot.size;
     } catch (error) {
         console.error('❌ Error getting members count:', error);
+        console.error('❌ Error details:', error.message, error.code);
         return 0;
     }
 }
@@ -183,10 +193,18 @@ async function getMembersCount() {
 // Get total events count (optimized)
 async function getEventsCount() {
     try {
+        console.log('🔍 Dashboard: Getting events count...');
+        if (!window.db) {
+            console.error('❌ Dashboard: window.db is not available for events');
+            return 0;
+        }
+        
         const snapshot = await window.db.collection('events').get();
+        console.log('✅ Dashboard: Events count retrieved:', snapshot.size);
         return snapshot.size;
     } catch (error) {
         console.error('❌ Error getting events count:', error);
+        console.error('❌ Error details:', error.message, error.code);
         return 0;
     }
 }
@@ -194,10 +212,18 @@ async function getEventsCount() {
 // Get total avatars count (optimized)
 async function getAvatarsCount() {
     try {
+        console.log('🔍 Dashboard: Getting avatars count...');
+        if (!window.db) {
+            console.error('❌ Dashboard: window.db is not available for avatars');
+            return 0;
+        }
+        
         const snapshot = await window.db.collection('avatars').get();
+        console.log('✅ Dashboard: Avatars count retrieved:', snapshot.size);
         return snapshot.size;
     } catch (error) {
         console.error('❌ Error getting avatars count:', error);
+        console.error('❌ Error details:', error.message, error.code);
         return 0;
     }
 }
@@ -265,10 +291,28 @@ async function getRecentActivityOptimized() {
 
 // Update statistics display
 function updateStatistics() {
-    document.getElementById('totalMembers').textContent = dashboardData.totalMembers;
-    document.getElementById('totalEvents').textContent = dashboardData.totalEvents;
-    document.getElementById('totalAvatars').textContent = dashboardData.totalAvatars;
-    document.getElementById('recentActivity').textContent = dashboardData.recentActivity;
+    console.log('📊 Dashboard: Updating statistics display with data:', dashboardData);
+    
+    const elements = {
+        totalMembers: document.getElementById('totalMembers'),
+        totalEvents: document.getElementById('totalEvents'),
+        totalAvatars: document.getElementById('totalAvatars'),
+        recentActivity: document.getElementById('recentActivity')
+    };
+    
+    // Check if elements exist
+    Object.entries(elements).forEach(([key, element]) => {
+        if (!element) {
+            console.error(`❌ Dashboard: Element ${key} not found in DOM`);
+        } else {
+            console.log(`✅ Dashboard: Updating ${key} to ${dashboardData[key]}`);
+        }
+    });
+    
+    if (elements.totalMembers) elements.totalMembers.textContent = dashboardData.totalMembers;
+    if (elements.totalEvents) elements.totalEvents.textContent = dashboardData.totalEvents;
+    if (elements.totalAvatars) elements.totalAvatars.textContent = dashboardData.totalAvatars;
+    if (elements.recentActivity) elements.recentActivity.textContent = dashboardData.recentActivity;
 
     // Add animation effect
     animateNumbers();
