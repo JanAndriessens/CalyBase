@@ -5,26 +5,13 @@
   "github": {
     "silent": true
   },
-  "functions": {
-    "index.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "builds": [
     {
       "src": "public/**/*",
       "use": "@vercel/static"
-    },
-    {
-      "src": "index.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/index.js"
-    },
     {
       "src": "/(.*)",
       "dest": "/public/$1"
