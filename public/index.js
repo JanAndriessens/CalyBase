@@ -14,72 +14,41 @@ let dashboardData = {
 
 // Initialize dashboard when Firebase is ready
 function initializeDashboard() {
-    if (typeof window.FirebaseManager === 'undefined') {
-        console.error('❌ Dashboard: FirebaseManager not available, retrying in 500ms...');
+    if (!window.db || !window.auth || typeof firebase === 'undefined') {
+        console.log('⏳ Dashboard: Waiting for Firebase services...');
         setTimeout(initializeDashboard, 500);
         return;
     }
     
-    console.log('🎯 Dashboard: FirebaseManager found, setting up callback...');
-    window.FirebaseManager.onReady(async (services) => {
+    console.log('🎯 Dashboard: Firebase services found, initializing...');
+    (async () => {
     try {
         console.log('🎯 Dashboard: Firebase is ready, initializing dashboard...');
         
-        // Add a visual debug indicator
-        const debugDiv = document.createElement('div');
-        debugDiv.id = 'debugStatus';
-        debugDiv.style.cssText = `
-            position: fixed; top: 10px; right: 10px; 
-            background: #333; color: white; padding: 10px; 
-            border-radius: 5px; z-index: 10000; max-width: 300px;
-            font-family: monospace; font-size: 12px;
-        `;
-        debugDiv.innerHTML = '🎯 Dashboard initializing with Firebase services...';
-        document.body.appendChild(debugDiv);
-        
-        // Firebase is already ready from FirebaseManager
-        debugDiv.innerHTML += '<br>✅ Firebase services confirmed!';
-        console.log('✅ Dashboard: Firebase services available:', services);
-        
-        // Check Firebase services
-        debugDiv.innerHTML += '<br>🔍 Service status:';
-        debugDiv.innerHTML += `<br>DB: ${services.db ? '✅' : '❌'}`;
-        debugDiv.innerHTML += `<br>Auth: ${services.auth ? '✅' : '❌'}`;
+        // Check Firebase services  
+        console.log('✅ Dashboard: Firebase services available:', {
+            db: !!window.db,
+            auth: !!window.auth,
+            firebase: typeof firebase !== 'undefined'
+        });
         
         // Load admin status and basic data in parallel for better performance
-        debugDiv.innerHTML += '<br>📊 Loading dashboard data...';
+        console.log('📊 Dashboard: Loading dashboard data...');
         const [adminStatus] = await Promise.all([
             checkAdminStatus(),
             loadBasicDashboardData() // Start loading basic data immediately
         ]);
         
-        debugDiv.innerHTML += '<br>✅ Dashboard data loaded!';
         console.log('✅ Dashboard: Initialization complete');
         
         // Setup logout functionality
         setupLogoutHandler();
         
-        // Remove debug after 10 seconds
-        setTimeout(() => debugDiv.remove(), 10000);
-        
     } catch (error) {
         console.error('❌ Dashboard: Error during initialization:', error);
-        console.error('❌ Dashboard: Error details:', {
-            message: error.message,
-            stack: error.stack,
-            name: error.name
-        });
-        
-        // Update debug display with error
-        const debugDiv = document.getElementById('debugStatus');
-        if (debugDiv) {
-            debugDiv.innerHTML += `<br>❌ ERROR: ${error.message}`;
-            debugDiv.style.background = '#ff4444';
-        }
-        
-        showErrorMessage('Erreur lors du chargement du tableau de bord');
+        showErrorMessage('Erreur lors du chargement du tableau de bord: ' + error.message);
     }
-    });
+    })();
 }
 
 // Start dashboard initialization
