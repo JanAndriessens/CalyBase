@@ -231,4 +231,4 @@ Complete GitHub Desktop + Vercel integration allowing easy visual commits and au
 - Local commits push successfully to GitHub
 - Vercel auto-deploys from GitHub main branch  
 - Live site: https://caly-base.vercel.app/
-tes é
+✅ Vercel-GitHub connection restored and tested
