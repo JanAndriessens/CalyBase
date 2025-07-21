@@ -232,3 +232,4 @@ Complete GitHub Desktop + Vercel integration allowing easy visual commits and au
 - Vercel auto-deploys from GitHub main branch  
 - Live site: https://caly-base.vercel.app/
 ✅ Vercel-GitHub connection restored and tested
+test
