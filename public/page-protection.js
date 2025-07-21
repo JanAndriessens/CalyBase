@@ -30,7 +30,7 @@ const SECURITY_CONFIG = {
     // Safari-specific extended timeouts for better compatibility
     maxSessionDuration: isIPadSafari ? 45 * 60 * 1000 : 30 * 60 * 1000, // 45min for iPad, 30min others
     inactivityTimeout: isIPadSafari ? 30 * 60 * 1000 : 20 * 60 * 1000, // 30min for iPad, 20min others
-    authTimeout: isIPadSafari ? 15000 : (isSafari ? 8000 : 3000), // 15s for iPad, 8s for Safari, 3s others
+    authTimeout: 30000, // 30s timeout for Vercel compatibility
     maxAuthAttempts: isIPadSafari ? 75 : 40, // Even more attempts for slower Safari
     protectedPages: [
         '/',
@@ -256,7 +256,19 @@ if (isProtectedPage) {
                                     });
                                 }
                                 
-                                // Set login time if not exists
+                                // Set login time if not exists (Vercel compatibility)
+                                if (!loginTime) {
+                                    loginTime = now;
+                                    storage.setItem('loginTime', loginTime);
+                                    console.log('🔧 Set initial login time for Vercel environment');
+                                }
+                                if (!lastActivity) {
+                                    lastActivity = now;
+                                    storage.setItem('lastActivity', lastActivity);
+                                    console.log('🔧 Set initial activity time for Vercel environment');
+                                }
+                                
+                                // Continue with existing session validation
                                 if (!loginTime) {
                                     console.log('🔍 No login time found, setting new session...');
                                     storage.setItem('loginTime', now.toString());
