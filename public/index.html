@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-touch-fullscreen" content="yes">
-    <title>CalyBase - Tableau de Bord ✅ FIREBASE FIX DEPLOYED</title>
+    <title>CalyBase - Tableau de Bord ✅ FIREBASE MANAGER ACTIVE</title>
     
     <!-- Critical CSS inlined for performance -->
     <style>
@@ -113,11 +113,16 @@
     <!-- Load Font Awesome with defer for better performance -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" media="print" onload="this.media='all'">
     
+    <!-- DEPLOYMENT VERIFICATION -->
+    <script>console.log('🔧 HTML DEPLOYMENT: Firebase SDK scripts loading from HEAD');</script>
+    
     <!-- CRITICAL: Firebase SDK must load first (synchronously) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script>console.log('🔥 Firebase App SDK loaded:', typeof firebase);</script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script>console.log('🔥 All Firebase SDK components loaded');</script>
     
     <!-- Firebase configuration and initialization -->
     <script src="firebase-config.js"></script>
