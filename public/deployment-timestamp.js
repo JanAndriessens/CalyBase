@@ -1,16 +1,16 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit EVENT-AVATAR-FIX');
-console.log('✅ LATEST DEPLOYMENT: Fixed ReferenceError in event-detail.js avatar loading');
-console.log('🎯 IF YOU SEE THIS: Event page avatars loading without errors!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit MEMBERS-DEBUG');
+console.log('✅ LATEST DEPLOYMENT: Added comprehensive debugging to event-detail.js loadMembers');
+console.log('🎯 IF YOU SEE THIS: Debug logging active for member loading issues!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'EVENT-AVATAR-FIX',
+    commit: 'MEMBERS-DEBUG',
     timestamp: new Date().toISOString(),
-    approach: 'Fixed undefined variable ReferenceError in event-detail.js',
+    approach: 'Added comprehensive debugging to diagnose member loading failures',
     expectedLogs: [
-        '🎯 Event page avatars loading without errors!',
-        '✅ Avatar utilities loaded with robust error handling',
-        'No more ReferenceError: participantAvatars/memberAvatars not defined'
+        '🎯 Debug logging active for member loading issues!',
+        '🔍 [MEMBERS DEBUG] Starting loadMembers function',
+        '✅ [DISPLAY DEBUG] Successfully created X member cards'
     ]
 };

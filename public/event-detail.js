@@ -212,31 +212,57 @@ async function loadParticipants(eventId) {
 // Fonction pour charger les membres avec performance optimisée
 async function loadMembers() {
     try {
-        // Récupérer d'abord la liste des participants
-        const eventDoc = await window.db.collection('events').doc(eventId).get();
-        const event = eventDoc.data();
-        const participants = event.participants || [];
-
-        // Récupérer tous les membres
-        const membersSnapshot = await window.db.collection('membres').get();
+        console.log('🔍 [MEMBERS DEBUG] Starting loadMembers function');
+        console.log('🔍 [MEMBERS DEBUG] eventId:', eventId);
+        console.log('🔍 [MEMBERS DEBUG] window.db status:', !!window.db);
+        
+        // Check DOM element first
         const membersList = document.getElementById('membersList');
+        if (!membersList) {
+            throw new Error('membersList DOM element not found');
+        }
+        console.log('✅ [MEMBERS DEBUG] membersList DOM element found');
         
         // Affichage immédiat du message de chargement
         membersList.innerHTML = '<div class="loading-message">Chargement des membres...</div>';
+        
+        // Récupérer d'abord la liste des participants
+        console.log('🔍 [MEMBERS DEBUG] Fetching event document...');
+        const eventDoc = await window.db.collection('events').doc(eventId).get();
+        if (!eventDoc.exists) {
+            throw new Error(`Event document not found for ID: ${eventId}`);
+        }
+        
+        const event = eventDoc.data();
+        const participants = event.participants || [];
+        console.log('✅ [MEMBERS DEBUG] Event loaded, participants count:', participants.length);
+
+        // Récupérer tous les membres
+        console.log('🔍 [MEMBERS DEBUG] Fetching members collection...');
+        const membersSnapshot = await window.db.collection('membres').get();
+        console.log('✅ [MEMBERS DEBUG] Members snapshot received, size:', membersSnapshot.size);
 
         // Stocker tous les membres non participants
         allMembers = [];
+        let membersProcessed = 0;
+        let membersFiltered = 0;
+        let membersWithoutID = 0;
+        
+        console.log('🔍 [MEMBERS DEBUG] Processing members...');
         membersSnapshot.forEach(doc => {
+            membersProcessed++;
             const memberData = doc.data();
             const lifrasid = memberData.lifrasID || '';
 
             if (!lifrasid) {
-                console.warn('Membre sans LIFRAS ID:', memberData);
+                membersWithoutID++;
+                console.warn('🔍 [MEMBERS DEBUG] Membre sans LIFRAS ID:', memberData);
                 return;
             }
 
             // Vérifier si le membre n'est pas déjà participant
-            if (!participants.some(p => p.lifrasid === lifrasid)) {
+            const isParticipant = participants.some(p => p.lifrasid === lifrasid);
+            if (!isParticipant) {
                 const member = {
                     lifrasid: lifrasid,
                     prenom: memberData.prenom || '',
@@ -244,8 +270,16 @@ async function loadMembers() {
                     lifrasID: memberData.lifrasID
                 };
                 allMembers.push(member);
+            } else {
+                membersFiltered++;
             }
         });
+        
+        console.log('✅ [MEMBERS DEBUG] Processing complete:');
+        console.log('  - Total members processed:', membersProcessed);
+        console.log('  - Members without ID:', membersWithoutID);
+        console.log('  - Members already participants (filtered):', membersFiltered);
+        console.log('  - Available members to add:', allMembers.length);
 
         // Trier les membres
         allMembers.sort((a, b) => {
@@ -276,13 +310,40 @@ async function loadMembers() {
             : allMembers;
 
         // Affichage immédiat avec avatars par défaut
-        displayMembers(filteredMembers);
+        console.log('🔍 [MEMBERS DEBUG] Filtering and displaying members...');
+        console.log(`📋 [MEMBERS DEBUG] Filtered members count: ${filteredMembers.length}`);
+        console.log(`📋 [MEMBERS DEBUG] Search term: "${searchTerm}"`);
+        
+        try {
+            displayMembers(filteredMembers);
+            console.log('✅ [MEMBERS DEBUG] displayMembers completed successfully');
+        } catch (displayError) {
+            console.error('❌ [MEMBERS DEBUG] Error in displayMembers:', displayError);
+            throw displayError;
+        }
         
         // Chargement des avatars en parallèle (sans bloquer l'affichage)
-        loadMemberAvatarsAsync(filteredMembers);
+        console.log(`🖼️ [MEMBERS DEBUG] Starting avatar loading for ${filteredMembers.length} members`);
+        loadMemberAvatarsAsync(filteredMembers).catch(error => {
+            console.error('❌ [MEMBERS DEBUG] Avatar loading failed for members:', error);
+        });
+        
+        console.log('✅ [MEMBERS DEBUG] loadMembers function completed successfully');
+        
     } catch (error) {
-        console.error('Erreur lors du chargement des membres:', error);
-        membersList.innerHTML = '<div class="error">Erreur lors du chargement des membres</div>';
+        console.error('❌ [MEMBERS DEBUG] Critical error in loadMembers:', error);
+        console.error('❌ [MEMBERS DEBUG] Error stack:', error.stack);
+        
+        // Try to get membersList again in case it was the issue
+        const membersList = document.getElementById('membersList');
+        if (membersList) {
+            membersList.innerHTML = `<div class="error">Erreur lors du chargement des membres: ${error.message}</div>`;
+        } else {
+            console.error('❌ [MEMBERS DEBUG] Cannot even find membersList element for error display');
+        }
+        
+        // Re-throw for higher-level error handling
+        throw error;
     }
 }
 
@@ -592,15 +653,27 @@ function displayParticipants(participants) {
 
 // Affichage immédiat des membres avec avatars par défaut
 function displayMembers(members) {
+    console.log('🔍 [DISPLAY DEBUG] Starting displayMembers with', members.length, 'members');
+    
     const membersList = document.getElementById('membersList');
+    if (!membersList) {
+        throw new Error('membersList element not found in displayMembers');
+    }
+    
     membersList.innerHTML = '';
 
     if (members.length === 0) {
+        console.log('🔍 [DISPLAY DEBUG] No members to display');
         membersList.innerHTML = '<div class="no-members">Aucun membre disponible</div>';
         return;
     }
 
-    members.forEach(member => {
+    console.log('🔍 [DISPLAY DEBUG] Creating member cards...');
+    let cardsCreated = 0;
+
+    members.forEach((member, index) => {
+        try {
+            console.log(`🔍 [DISPLAY DEBUG] Processing member ${index + 1}/${members.length}:`, member.prenom, member.nom);
         const memberCard = document.createElement('div');
         memberCard.className = 'member-card';
         memberCard.setAttribute('data-lifras-id-member', member.lifrasID);
@@ -649,5 +722,14 @@ function displayMembers(members) {
         memberCard.appendChild(addButton);
         
         membersList.appendChild(memberCard);
+        cardsCreated++;
+        
+        } catch (cardError) {
+            console.error(`❌ [DISPLAY DEBUG] Error creating member card ${index + 1}:`, cardError);
+            console.error('❌ [DISPLAY DEBUG] Member data:', member);
+            throw cardError;
+        }
     });
+    
+    console.log(`✅ [DISPLAY DEBUG] Successfully created ${cardsCreated} member cards`);
 } 
