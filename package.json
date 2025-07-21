@@ -8,7 +8,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "optimize": "node scripts/optimize.js",
-    "build": "npm run optimize && npm start",
+    "build": "npm run optimize",
     "build:production": "npm run optimize && NODE_ENV=production npm start",
     "perf:test": "node scripts/performance-test.js",
     "cache:clear": "node scripts/clear-cache.js",
