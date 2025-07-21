@@ -610,6 +610,9 @@
                 case 'emergency_logout':
                     message = '<i class="fas fa-exclamation-triangle"></i> <strong>Déconnexion de sécurité</strong><br>Votre session a été fermée par mesure de sécurité';
                     break;
+                case 'vercel_auth_required':
+                    message = '<i class="fas fa-cloud"></i> <strong>Authentification requise</strong><br>Connexion nécessaire pour accéder à cette page';
+                    break;
                 default:
                     message = '<i class="fas fa-info-circle"></i> <strong>Connexion requise</strong><br>Veuillez vous connecter pour continuer';
             }
