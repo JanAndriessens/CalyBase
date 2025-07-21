@@ -17,21 +17,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         console.log('🎯 Dashboard: Initializing...');
         
+        // Add a visual debug indicator
+        const debugDiv = document.createElement('div');
+        debugDiv.id = 'debugStatus';
+        debugDiv.style.cssText = `
+            position: fixed; top: 10px; right: 10px; 
+            background: #333; color: white; padding: 10px; 
+            border-radius: 5px; z-index: 10000; max-width: 300px;
+            font-family: monospace; font-size: 12px;
+        `;
+        debugDiv.innerHTML = '🎯 Dashboard initializing...';
+        document.body.appendChild(debugDiv);
+        
         // Wait for Firebase to be ready
+        debugDiv.innerHTML += '<br>⏳ Waiting for Firebase...';
         await waitForFirebaseReady();
         
+        debugDiv.innerHTML += '<br>✅ Firebase ready!';
         console.log('✅ Dashboard: Firebase ready, loading data...');
         
+        // Check Firebase services
+        debugDiv.innerHTML += '<br>🔍 Checking services...';
+        debugDiv.innerHTML += `<br>DB: ${window.db ? '✅' : '❌'}`;
+        debugDiv.innerHTML += `<br>Auth: ${window.auth ? '✅' : '❌'}`;
+        
         // Load admin status and basic data in parallel for better performance
+        debugDiv.innerHTML += '<br>📊 Loading data...';
         const [adminStatus] = await Promise.all([
             checkAdminStatus(),
             loadBasicDashboardData() // Start loading basic data immediately
         ]);
         
+        debugDiv.innerHTML += '<br>✅ Data loaded!';
         console.log('✅ Dashboard: Initialization complete');
         
         // Setup logout functionality
         setupLogoutHandler();
+        
+        // Remove debug after 10 seconds
+        setTimeout(() => debugDiv.remove(), 10000);
         
     } catch (error) {
         console.error('❌ Dashboard: Error during initialization:', error);
@@ -40,6 +64,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             stack: error.stack,
             name: error.name
         });
+        
+        // Update debug display with error
+        const debugDiv = document.getElementById('debugStatus');
+        if (debugDiv) {
+            debugDiv.innerHTML += `<br>❌ ERROR: ${error.message}`;
+            debugDiv.style.background = '#ff4444';
+        }
+        
         showErrorMessage('Erreur lors du chargement du tableau de bord');
     }
 });
