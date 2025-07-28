@@ -12,6 +12,7 @@ let userManagementData = {
     pendingUsers: [],
     filteredUsers: [],
     currentUser: null,
+    currentUserRole: null,
     statistics: { total: 0, pending: 0, active: 0, suspended: 0 }
 };
 
@@ -25,6 +26,31 @@ function translateStatus(status) {
         'unknown': 'inconnu'
     };
     return translations[status] || status;
+}
+
+// Get current user's role from Firestore
+async function getCurrentUserRole() {
+    try {
+        const user = window.auth?.currentUser;
+        if (!user) return null;
+        
+        if (userManagementData.currentUserRole) {
+            return userManagementData.currentUserRole;
+        }
+
+        const userDoc = await window.db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            userManagementData.currentUserRole = userData.role || 'user';
+            console.log('👤 Current user role:', userManagementData.currentUserRole);
+            return userManagementData.currentUserRole;
+        }
+        
+        return 'user'; // Default role
+    } catch (error) {
+        console.error('❌ Error getting current user role:', error);
+        return 'user'; // Fallback to user role
+    }
 }
 
 // SECURITY: Check if current user has admin permissions
@@ -49,8 +75,8 @@ async function checkAdminPermissions() {
                 if (userDoc.exists) {
                     const userData = userDoc.data();
                     console.log('🔍 User Management: Firestore user data:', userData);
-                    if (userData.role === 'admin' && userData.status === 'active') {
-                        console.log('👑 User Management: Admin role found in Firestore');
+                    if ((userData.role === 'admin' || userData.role === 'superAdmin') && userData.status === 'active') {
+                        console.log('👑 User Management: Admin/SuperAdmin role found in Firestore:', userData.role);
                         isAdmin = true;
                     }
                 }
@@ -390,8 +416,8 @@ function updateStatistics() {
 }
 
 // Update all users list
-function updateAllUsersList() {
-    updateFilteredUsersList();
+async function updateAllUsersList() {
+    await updateFilteredUsersList();
 }
 
 // Update pending users display
@@ -476,18 +502,18 @@ function setupEventListeners() {
     const statusFilter = document.getElementById('statusFilter');
     
     if (searchInput) {
-        searchInput.addEventListener('input', filterUsers);
+        searchInput.addEventListener('input', () => filterUsers());
     }
     if (roleFilter) {
-        roleFilter.addEventListener('change', filterUsers);
+        roleFilter.addEventListener('change', () => filterUsers());
     }
     if (statusFilter) {
-        statusFilter.addEventListener('change', filterUsers);
+        statusFilter.addEventListener('change', () => filterUsers());
     }
 }
 
 // Filter users based on search and filters
-function filterUsers() {
+async function filterUsers() {
     const searchTerm = document.getElementById('usersSearchInput')?.value.toLowerCase() || '';
     const roleFilter = document.getElementById('roleFilter')?.value || '';
     const statusFilter = document.getElementById('statusFilter')?.value || '';
@@ -504,11 +530,11 @@ function filterUsers() {
     });
     
     userManagementData.filteredUsers = filteredUsers;
-    updateFilteredUsersList();
+    await updateFilteredUsersList();
 }
 
 // Update filtered users list
-function updateFilteredUsersList() {
+async function updateFilteredUsersList() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
@@ -519,8 +545,27 @@ function updateFilteredUsersList() {
         return;
     }
     
+    // Get current user's role for delete button logic
+    const currentUserRole = await getCurrentUserRole();
+    const currentUserId = window.auth?.currentUser?.uid;
+    
     userManagementData.filteredUsers.forEach(user => {
         const row = document.createElement('tr');
+        
+        // Super admin hierarchy logic for delete button
+        let showDeleteButton = false;
+        
+        if (currentUserRole === 'superAdmin') {
+            // Super admins can delete anyone except themselves
+            showDeleteButton = user.uid !== currentUserId;
+        } else if (currentUserRole === 'admin') {
+            // Regular admins can only delete regular users (not other admins or super admins)
+            showDeleteButton = user.role === 'user' && user.uid !== currentUserId;
+        } else {
+            // Regular users cannot delete anyone
+            showDeleteButton = false;
+        }
+        
         row.innerHTML = `
             <td>${user.username || '-'}</td>
             <td>${user.email}</td>
@@ -533,7 +578,7 @@ function updateFilteredUsersList() {
                     <button class="btn btn-edit btn-icon" data-action="edit" data-uid="${user.uid}" title="Modifier">
                         <i class="fas fa-edit"></i>
                     </button>
-                    ${user.role !== 'admin' ? `<button class="btn btn-reject btn-icon" data-action="delete" data-uid="${user.uid}" data-email="${user.email}" title="Supprimer">
+                    ${showDeleteButton ? `<button class="btn btn-reject btn-icon" data-action="delete" data-uid="${user.uid}" data-email="${user.email}" title="Supprimer">
                         <i class="fas fa-trash"></i>
                     </button>` : ''}
                 </div>
@@ -575,7 +620,7 @@ async function loadAllData() {
 
         calculateStatistics();
         updateStatistics();
-        updateAllUsersList();
+        await updateAllUsersList();
         updatePendingUsersList();
         
         console.log('✅ User Management: Data loading complete');
