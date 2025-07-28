@@ -136,14 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingMessage.textContent = 'Importation en cours...';
             document.body.appendChild(loadingMessage);
 
-            const data = await readExcelFile(file);
-            console.log(`${data.length} lignes lues du fichier Excel`);
-            
-            if (data.length === 0) {
-                throw new Error('Aucune donnée trouvée dans le fichier Excel');
-            }
-
-            await importMembres(data);
+            // readExcelFile now shows preview and handles import internally
+            await readExcelFile(file);
             
             // Remove loading message
             const msg = document.getElementById('loading-message');
@@ -297,6 +291,52 @@ async function readExcelFile(file) {
                     console.log(`Row ${i} cell count:`, jsonData[i] ? jsonData[i].length : 0);
                 }
 
+                // Show column preview to user for validation
+                const previewHtml = `
+                    <div style="background: white; padding: 20px; border: 2px solid #333; max-width: 90%; max-height: 80%; overflow: auto; position: fixed; top: 10%; left: 5%; z-index: 10000;">
+                        <h3>📋 Preview Excel Structure - Verify Before Import</h3>
+                        <p><strong>Headers found:</strong> ${jsonData[0] ? jsonData[0].length : 0} columns</p>
+                        <table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">
+                            <tr style="background: #f0f0f0;">
+                                ${jsonData[0] ? jsonData[0].map((header, i) => `<th>Col ${i}: ${header || 'Empty'}</th>`).join('') : ''}
+                            </tr>
+                            ${jsonData.slice(1, 4).map((row, i) => `
+                                <tr>
+                                    ${row ? row.map(cell => `<td>${String(cell || '').substring(0, 50)}${String(cell || '').length > 50 ? '...' : ''}</td>`).join('') : ''}
+                                </tr>
+                            `).join('')}
+                        </table>
+                        <div style="margin-top: 15px;">
+                            <button onclick="document.getElementById('excel-preview').remove(); window.continueExcelImport();" style="background: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; border: none; cursor: pointer;">✅ Continue Import</button>
+                            <button onclick="document.getElementById('excel-preview').remove();" style="background: #f44336; color: white; padding: 10px 20px; border: none; cursor: pointer;">❌ Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                const previewDiv = document.createElement('div');
+                previewDiv.id = 'excel-preview';
+                previewDiv.innerHTML = previewHtml;
+                document.body.appendChild(previewDiv);
+
+                // Store data for continuation
+                window.tempExcelData = jsonData;
+                return; // Stop here until user confirms
+
+            } catch (error) {
+                console.error('Error processing Excel file:', error);
+                reject(error);
+            }
+        };
+
+        // Add continuation function
+        window.continueExcelImport = async function() {
+            try {
+                const jsonData = window.tempExcelData;
+                if (!jsonData) {
+                    alert('Excel data lost. Please try importing again.');
+                    return;
+                }
+
                 // Verwerk de data, beginnend vanaf de tweede rij (index 1)
                 const processedData = jsonData.slice(1).map((row, index) => {
                     console.log(`Processing row ${index + 1}:`, row);
@@ -388,16 +428,24 @@ async function readExcelFile(file) {
                 
                 if (processedData.length === 0) {
                     console.error('No data was processed from the Excel file');
-                    reject(new Error('No data was processed from the Excel file'));
+                    alert('No data was processed from the Excel file');
                     return;
                 }
 
-                resolve(processedData);
+                // Continue with import after user confirmation
+                console.log('User confirmed import, proceeding...');
+                await importMembres(processedData);
+                await loadMembers(); // Refresh the display
+                alert(`✅ Import successful! ${processedData.length} members imported.`);
+                
             } catch (error) {
                 console.error('Error processing Excel file:', error);
-                reject(error);
+                alert('Error processing Excel file: ' + error.message);
             }
         };
+
+        // Don't auto-resolve anymore - wait for user confirmation
+        // resolve(processedData) is removed
 
         reader.onerror = function(error) {
             console.error('Error reading file:', error);
