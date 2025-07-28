@@ -263,15 +263,17 @@ async function readExcelFile(file) {
                 console.log('XLSX library version:', XLSX.version);
                 const data = new Uint8Array(e.target.result);
                 
-                // Aangepaste opties voor SheetJS
+                // Enhanced options for SheetJS with better encoding handling
                 const workbook = XLSX.read(data, { 
                     type: 'array',
-                    codepage: 1252, // Windows-1252 voor Europese karakters
+                    codepage: 65001, // UTF-8 encoding for better international character support
                     cellDates: true,
                     cellNF: false,
-                    cellText: false,
-                    WTF: true,
-                    raw: false
+                    cellText: true,   // Use formatted text to preserve encoding
+                    WTF: false,       // Don't write through formatting errors
+                    raw: false,
+                    cellFormula: false,
+                    cellHTML: false   // Don't parse HTML content
                 });
 
                 console.log('Workbook sheets:', workbook.SheetNames);
@@ -289,7 +291,11 @@ async function readExcelFile(file) {
                 console.log('Raw Excel data:', jsonData);
                 console.log('Number of rows:', jsonData.length);
                 console.log('Excel headers:', jsonData[0]); // Debug: toon headers
-                console.log('First row:', jsonData[1]); // Debug: toon eerste rij
+                console.log('First few rows for debugging:');
+                for (let i = 1; i <= Math.min(3, jsonData.length - 1); i++) {
+                    console.log(`Row ${i}:`, jsonData[i]);
+                    console.log(`Row ${i} cell count:`, jsonData[i] ? jsonData[i].length : 0);
+                }
 
                 // Verwerk de data, beginnend vanaf de tweede rij (index 1)
                 const processedData = jsonData.slice(1).map((row, index) => {
@@ -311,7 +317,10 @@ async function readExcelFile(file) {
                             .replace(/¡/g, 'i')
                             .replace(/<[^>]*>/g, '')      // Remove HTML tags like <td>, </td>
                             .replace(/&[^;]+;/g, '')      // Remove HTML entities like &nbsp;
-                            .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters only
+                            .replace(/[\u4e00-\u9fff]/g, '') // Remove Chinese characters (encoding artifacts)
+                            .replace(/[\u3400-\u4dbf]/g, '') // Remove Chinese extension characters
+                            .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+                            .replace(/\s+/g, ' ')         // Normalize multiple spaces to single space
                             .trim();
                         console.log(`Cell ${cellIndex} cleaned: "${str}" -> "${cleaned}"`);
                         return cleaned;
