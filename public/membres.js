@@ -1222,9 +1222,7 @@ async function applyMemberActionPermissions() {
 }
 
 // Excel Import Functionality with HTML Tag Cleaning
-// DOM Elements for Excel import
-const importExcelBtn = document.getElementById('importExcelBtn');
-const excelFileInput = document.getElementById('excelFileInput');
+// Note: DOM elements already declared at top of file (importExcelBtn, excelFileInput)
 
 // Add Excel import event listeners
 if (importExcelBtn && excelFileInput) {
