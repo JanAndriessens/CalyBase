@@ -300,7 +300,7 @@ async function readExcelFile(file) {
                         return null;
                     }
 
-                    // Converteer en reinig elke cel
+                    // Converteer en reinig elke cel (preserving French accents)
                     const cleanRow = row.map((cell, cellIndex) => {
                         if (cell === undefined || cell === null) {
                             console.log(`Empty cell at row ${index + 1}, column ${cellIndex}`);
@@ -309,7 +309,9 @@ async function readExcelFile(file) {
                         const str = String(cell);
                         const cleaned = str
                             .replace(/¡/g, 'i')
-                            .replace(/[^\x00-\x7F]/g, '')
+                            .replace(/<[^>]*>/g, '')      // Remove HTML tags like <td>, </td>
+                            .replace(/&[^;]+;/g, '')      // Remove HTML entities like &nbsp;
+                            .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters only
                             .trim();
                         console.log(`Cell ${cellIndex} cleaned: "${str}" -> "${cleaned}"`);
                         return cleaned;
