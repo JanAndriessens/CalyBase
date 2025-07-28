@@ -266,7 +266,7 @@ async function loadAllUsers() {
             console.log('⚠️ User Management: Local Express API failed, trying Firebase Functions...', localError.message);
             
             // Fallback to Firebase Functions
-            const functionsUrl = 'https://api-eyszfnocva-uc.a.run.app/auth/firebase-users';
+            const functionsUrl = 'https://us-central1-calybase.cloudfunctions.net/api/auth/firebase-users';
             const response = await fetch(functionsUrl, {
                 method: 'GET',
                 headers: {
@@ -911,11 +911,11 @@ window.deleteUser = async function(uid, email) {
 
         const token = await currentUser.getIdToken();
         
-        // Determine the correct API URL based on the current domain
+        // Use Firebase Functions API endpoint
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const apiUrl = isLocalhost 
             ? 'http://localhost:3001/api/auth/delete-user'
-            : 'https://api-eyszfnocva-uc.a.run.app/auth/delete-user';
+            : 'https://us-central1-calybase.cloudfunctions.net/api/auth/delete-user';
         
         console.log(`🌐 Current hostname: ${window.location.hostname}`);
         console.log(`🌐 Is localhost: ${isLocalhost}`);
