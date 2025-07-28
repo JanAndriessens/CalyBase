@@ -238,14 +238,13 @@ Complete GitHub Desktop + Vercel integration allowing easy visual commits and au
 ## 🔐 Social Login Integration - IMPLEMENTATION COMPLETED
 
 ### Issue: July 28, 2025
-**Request**: Add Google and Apple login options alongside existing email/password authentication
+**Request**: Add Google login alongside existing email/password authentication
 
 ### ✅ Implementation Completed:
 
 #### **1. Firebase Configuration Enhanced**
-- [x] **Updated `firebase-config.js`** with OAuth provider configurations
+- [x] **Updated `firebase-config.js`** with OAuth provider configuration
   - Added Google OAuth client ID configuration
-  - Added Apple Sign-In service ID and redirect URI
   - Made OAuth config globally available via `window.oauthConfig`
   - Backwards compatible with existing configuration system
 
@@ -256,35 +255,29 @@ Complete GitHub Desktop + Vercel integration allowing easy visual commits and au
   - Account selection prompt for better UX
   - PopUp-based authentication flow
 
-#### **3. Apple Sign-In Integration**  
-- [x] **Implemented Apple OAuth Provider** with Firebase Auth
-  - Email and name scope access
-  - French locale support
-  - PopUp-based authentication flow compatible with web
 
-#### **4. UI Components Added**
-- [x] **Social Login Buttons** with professional styling
+#### **3. UI Components Added**
+- [x] **Google Sign-In Button** with professional styling
   - Google button with official Google colors and icon
-  - Apple button with black styling and Apple icon
-  - Responsive design (stacked on mobile, side-by-side on iPad)
+  - Responsive design for mobile and iPad
   - Loading spinners and disabled states
   - 44px minimum touch targets for iPad compatibility
 
-#### **5. User Experience Enhancements**
+#### **4. User Experience Enhancements**
 - [x] **Seamless Integration** with existing authentication flow
   - Same approval workflow (admin must approve new social accounts)
   - Same account lockout protection system
   - Same French localization and error handling
   - Same iPad Safari compatibility
 
-#### **6. Enhanced User Document Handling**
-- [x] **Social Login User Data** properly stored in Firestore
-  - Login provider tracking (`google` or `apple`)
+#### **5. Enhanced User Document Handling**
+- [x] **Google Sign-In User Data** properly stored in Firestore
+  - Login provider tracking (`google`)
   - Provider-specific data (displayName, photoURL, providerId)
   - Email verification status (social logins considered verified)
   - Seamless integration with existing user approval system
 
-#### **7. Comprehensive Error Handling**
+#### **6. Comprehensive Error Handling**
 - [x] **Social-Specific Error Messages** in French
   - Popup blocked/closed by user
   - Network connectivity issues
@@ -310,7 +303,7 @@ Complete GitHub Desktop + Vercel integration allowing easy visual commits and au
 - **Accessibility**: Proper ARIA labels, keyboard navigation, screen reader support
 
 #### **Authentication Flow:**
-1. User clicks Google/Apple button
+1. User clicks Google button
 2. Provider popup opens for authentication
 3. User authenticates with social provider
 4. Firebase receives OAuth tokens and creates user session
@@ -323,22 +316,19 @@ Complete GitHub Desktop + Vercel integration allowing easy visual commits and au
 #### **Firebase Console Setup Required:**
 Before social login works on production, you need to:
 
-1. **Enable Authentication Providers** in Firebase Console:
+1. **Enable Google Provider** in Firebase Console:
    - Go to Authentication → Sign-in method
    - Enable Google provider and configure OAuth client
-   - Enable Apple provider and configure service ID
 
-2. **Configure OAuth Credentials:**
+2. **Configure Google OAuth Credentials:**
    - **Google**: Update client ID in `firebase-config.js` (line 24)
-   - **Apple**: Update service ID in `firebase-config.js` (line 27)
    - Add authorized domains for your production site
 
-3. **Update OAuth Redirect URIs:**
+3. **Update Google OAuth Redirect URIs:**
    - Add `https://caly-base.vercel.app` to authorized domains
-   - Configure proper redirect URIs for Apple Sign-In
 
 #### **Testing Checklist:**
-- [ ] **Desktop Testing**: Google/Apple login on Chrome, Firefox, Safari
+- [ ] **Desktop Testing**: Google login on Chrome, Firefox, Safari
 - [ ] **iPad Testing**: Touch targets, popup behavior, Safari compatibility  
 - [ ] **Mobile Testing**: Responsive button layout, popup handling
 - [ ] **Error Scenarios**: Popup blocked, network issues, account approval flow
@@ -351,22 +341,18 @@ Before social login works on production, you need to:
 - Authorized domains: `calybase.firebaseapp.com`, `caly-base.vercel.app`
 - Authorized redirect URIs: `https://calybase.firebaseapp.com/__/auth/handler`
 
-#### **Apple Sign-In Setup:**  
-- Service ID format: `com.calybase.signin`
-- Redirect URI: `https://calybase.firebaseapp.com/__/auth/handler`
-- Verified domains: `caly-base.vercel.app`
 
 ### 📊 **Expected Benefits:**
 - **Improved User Experience**: Faster registration/login process
 - **Higher Conversion**: Reduced friction for new users
 - **Better Security**: OAuth providers handle password security
-- **Enhanced Analytics**: Track registration sources (email vs Google vs Apple)
+- **Enhanced Analytics**: Track registration sources (email vs Google)
 
 ---
 
 **Implementation Status**: ✅ **COMPLETED** - Ready for Firebase configuration and deployment testing
 
-**Next Action**: Configure OAuth providers in Firebase Console and deploy for testing
+**Next Action**: Google Sign-In is ready for production use
 
 ---
 

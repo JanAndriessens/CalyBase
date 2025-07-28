@@ -22,10 +22,6 @@ async function loadFirebaseConfig() {
                 oauth: {
                     google: {
                         clientId: "108529148364-4jt6ucd02f92jaco7pvcheo0dld2k1fq.apps.googleusercontent.com"
-                    },
-                    apple: {
-                        clientId: "com.calybase.signin",
-                        redirectUri: "https://calybase.firebaseapp.com/__/auth/handler"
                     }
                 },
                 recaptcha: {
@@ -71,8 +67,7 @@ async function loadFirebaseConfig() {
         window.firebaseConfig = config.firebase;
         window.recaptchaSiteKey = config.recaptcha.siteKey;
         window.oauthConfig = config.oauth || {
-            google: { clientId: "108529148364-4jt6ucd02f92jaco7pvcheo0dld2k1fq.apps.googleusercontent.com" },
-            apple: { clientId: "com.calybase.signin", redirectUri: "https://calybase.firebaseapp.com/__/auth/handler" }
+            google: { clientId: "108529148364-4jt6ucd02f92jaco7pvcheo0dld2k1fq.apps.googleusercontent.com" }
         };
         
         return config.firebase;
