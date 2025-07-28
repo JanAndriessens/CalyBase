@@ -357,17 +357,45 @@ window.continueExcelImport = async function() {
                 if (cell === undefined || cell === null) return '';
                 
                 const str = String(cell);
-                const cleaned = str
+                let cleaned = str
                     .replace(/¡/g, 'i')
-                    .replace(/<[^>]*>/g, '')      // Remove HTML tags like <td>, </td>
-                    .replace(/&[^;]+;/g, '')      // Remove HTML entities like &nbsp;
-                    .replace(/[\u4e00-\u9fff]/g, '') // Remove Chinese characters (encoding artifacts)
-                    .replace(/[\u3400-\u4dbf]/g, '') // Remove Chinese extension characters
-                    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
-                    .replace(/\s+/g, ' ')         // Normalize multiple spaces to single space
+                    .replace(/<\/?[^>]+(>|$)/g, '')   // Remove HTML tags like <td>, </td>, /td>
+                    .replace(/&[a-zA-Z0-9#]+;/g, '')  // Remove HTML entities like &nbsp;
+                    .replace(/[\u4e00-\u9fff]/g, '')  // Remove Chinese characters (encoding artifacts)
+                    .replace(/[\u3400-\u4dbf]/g, '')  // Remove Chinese extension characters
+                    .replace(/[\uf900-\ufaff]/g, '')  // Remove CJK compatibility characters
+                    .replace(/[\x00-\x1F\x7F]/g, '')  // Remove control characters
+                    .replace(/\/?td>/g, '')           // Remove /td> artifacts specifically
+                    .replace(/\/?tr>/g, '')           // Remove /tr> artifacts
+                    .replace(/\/?table>/g, '')        // Remove /table> artifacts
+                    .replace(/\s+/g, ' ')             // Normalize multiple spaces to single space
                     .trim();
                 
                 return cleaned;
+            };
+
+            // Special function to extract first name from corrupted data
+            const extractFirstName = (colIndex) => {
+                const fullValue = getCleanValue(colIndex);
+                if (!fullValue) return '';
+                
+                // If the value contains address-like patterns, extract only the first part (likely the name)
+                const addressPatterns = /\b\d{4}\b|\bWavre\b|\bBruxelles\b|\bLiège\b|\bChaussée\b|\bRue\b|\bAvenue\b|\bBoulevard\b/i;
+                
+                if (addressPatterns.test(fullValue)) {
+                    // Split on common separators and take the first meaningful part
+                    const parts = fullValue.split(/[\s\-_]+/);
+                    for (let part of parts) {
+                        // Return first part that looks like a name (alphabetic, reasonable length)
+                        if (part.length >= 2 && part.length <= 20 && /^[A-Za-zÀ-ÿ]+$/.test(part)) {
+                            return part;
+                        }
+                    }
+                    // If no clean name found, return first part
+                    return parts[0] || '';
+                }
+                
+                return fullValue;
             };
 
             // Create object using header-based mapping
@@ -375,7 +403,7 @@ window.continueExcelImport = async function() {
                 lifrasID: getCleanValue(columnMapping.lifrasID),
                 nrFebras: getCleanValue(columnMapping.nrFebras),
                 nom: getCleanValue(columnMapping.nom),
-                prenom: getCleanValue(columnMapping.prenom),
+                prenom: extractFirstName(columnMapping.prenom),
                 adresse: getCleanValue(columnMapping.adresse),
                 codePostal: getCleanValue(columnMapping.codePostal),
                 localite: getCleanValue(columnMapping.localite),
