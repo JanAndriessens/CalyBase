@@ -48,7 +48,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update: if isAuthenticated(); // Allow authenticated users to update member data
-      allow delete: if hasRole('admin'); // Only admins can delete members
+      allow delete: if isAdmin(); // Admins and superAdmins can delete members
     }
     
     // Rules for avatars collection
@@ -56,7 +56,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update: if isAuthenticated();
-      allow delete: if hasRole('admin'); // Only admins can delete avatar records
+      allow delete: if isAdmin(); // Admins and superAdmins can delete avatar records
     }
     
     // Rules for events collection
