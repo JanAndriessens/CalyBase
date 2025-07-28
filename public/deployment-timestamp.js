@@ -1,5 +1,5 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: 7/28/2025, 10:47:23 PM - Commit EXCEL-IMPORT-FIX-v2');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit EXCEL-IMPORT-REAL-FIX');
 console.log('✅ LATEST DEPLOYMENT: Fixed Excel import duplicate functions and HTML tag cleaning');
 console.log('🎯 IF YOU SEE THIS: Excel import should work without duplicates or HTML artifacts!');
 

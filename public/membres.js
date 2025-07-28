@@ -230,36 +230,16 @@ async function readExcelFile(file) {
                     console.log(`Row ${i} cell count:`, jsonData[i] ? jsonData[i].length : 0);
                 }
 
-                // Show column preview to user for validation
-                const previewHtml = `
-                    <div style="background: white; padding: 20px; border: 2px solid #333; max-width: 90%; max-height: 80%; overflow: auto; position: fixed; top: 10%; left: 5%; z-index: 10000;">
-                        <h3>📋 Preview Excel Structure - Verify Before Import</h3>
-                        <p><strong>Headers found:</strong> ${jsonData[0] ? jsonData[0].length : 0} columns</p>
-                        <table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">
-                            <tr style="background: #f0f0f0;">
-                                ${jsonData[0] ? jsonData[0].map((header, i) => `<th>Col ${i}: ${header || 'Empty'}</th>`).join('') : ''}
-                            </tr>
-                            ${jsonData.slice(1, 4).map((row, i) => `
-                                <tr>
-                                    ${row ? row.map(cell => `<td>${String(cell || '').substring(0, 50)}${String(cell || '').length > 50 ? '...' : ''}</td>`).join('') : ''}
-                                </tr>
-                            `).join('')}
-                        </table>
-                        <div style="margin-top: 15px;">
-                            <button onclick="document.getElementById('excel-preview').remove(); window.continueExcelImport();" style="background: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; border: none; cursor: pointer;">✅ Continue Import</button>
-                            <button onclick="document.getElementById('excel-preview').remove();" style="background: #f44336; color: white; padding: 10px 20px; border: none; cursor: pointer;">❌ Cancel</button>
-                        </div>
-                    </div>
-                `;
-                
-                const previewDiv = document.createElement('div');
-                previewDiv.id = 'excel-preview';
-                previewDiv.innerHTML = previewHtml;
-                document.body.appendChild(previewDiv);
-
-                // Store data for continuation
+                // Store data and import directly
                 window.tempExcelData = jsonData;
-                return; // Stop here until user confirms
+                
+                // Remove loading message before import
+                const loadingMsg = document.getElementById('loading-message');
+                if (loadingMsg) loadingMsg.remove();
+                
+                // Import directly without preview
+                await window.continueExcelImport();
+                resolve();
 
             } catch (error) {
                 console.error('Error processing Excel file:', error);
@@ -1228,34 +1208,6 @@ if (importExcelBtn && excelFileInput) {
 }
 
 
-// Show Excel preview dialog
-function showExcelPreview(jsonData) {
-    const previewHtml = `
-        <div style="background: white; padding: 20px; border: 2px solid #333; max-width: 90%; max-height: 80%; overflow: auto; position: fixed; top: 10%; left: 5%; z-index: 10000;">
-            <h3>📋 Preview Excel Structure - Verify Before Import</h3>
-            <p><strong>Headers found:</strong> ${jsonData[0] ? jsonData[0].length : 0} columns</p>
-            <table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">
-                <tr style="background: #f0f0f0;">
-                    ${jsonData[0] ? jsonData[0].map((header, i) => `<th>Col ${i}: ${header || 'Empty'}</th>`).join('') : ''}
-                </tr>
-                ${jsonData.slice(1, 4).map((row, i) => `
-                    <tr>
-                        ${row ? row.map(cell => `<td>${String(cell || '').substring(0, 50)}${String(cell || '').length > 50 ? '...' : ''}</td>`).join('') : ''}
-                    </tr>
-                `).join('')}
-            </table>
-            <div style="margin-top: 15px;">
-                <button onclick="document.getElementById('excel-preview').remove(); window.continueExcelImport();" style="background: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; border: none; cursor: pointer;">✅ Continue Import</button>
-                <button onclick="document.getElementById('excel-preview').remove();" style="background: #f44336; color: white; padding: 10px 20px; border: none; cursor: pointer;">❌ Cancel</button>
-            </div>
-        </div>
-    `;
-    
-    const previewDiv = document.createElement('div');
-    previewDiv.id = 'excel-preview';
-    previewDiv.innerHTML = previewHtml;
-    document.body.appendChild(previewDiv);
-}
 
 // Enhanced text cleaning function to handle HTML tags and encoding issues
 function cleanExcelText(text) {
