@@ -248,18 +248,17 @@ async function readExcelFile(file) {
                 console.log('XLSX library version:', XLSX.version);
                 const data = new Uint8Array(e.target.result);
                 
-                // Enhanced options for SheetJS with French character support
+                // XLSX-optimized options for reliable French character support
                 const workbook = XLSX.read(data, { 
                     type: 'array',
-                    codepage: 1252,   // Windows-1252 (Western European) for better French character support
+                    codepage: 65001,  // UTF-8 for XLSX files (better than Windows-1252 for modern format)
                     cellDates: true,
                     cellNF: false,
                     cellText: true,   // Use formatted text to preserve encoding
                     WTF: false,       // Don't write through formatting errors
-                    raw: false,       // Keep as false to preserve French accents
+                    raw: false,       // Preserve formatted text with French accents
                     cellFormula: false,
                     cellHTML: false,  // Don't parse HTML content
-                    FS: '\t',         // Force tab separator to respect cell boundaries
                     dense: false      // Use standard format for better parsing
                 });
 
@@ -1233,10 +1232,26 @@ if (importExcelBtn && excelFileInput) {
 
         console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
 
-        // Check file extension
+        // Check file extension - only XLSX accepted
         const fileExtension = file.name.split('.').pop().toLowerCase();
-        if (!['xls', 'xlsx'].includes(fileExtension)) {
-            alert('Seuls les fichiers .xls et .xlsx sont autorisés');
+        
+        if (fileExtension === 'xls') {
+            alert(`⚠️ Format de fichier non supporté
+
+Seuls les fichiers XLSX sont acceptés pour garantir une importation fiable.
+
+Pour convertir votre fichier XLS en XLSX :
+1. Ouvrez votre fichier dans Excel
+2. Cliquez sur 'Fichier' → 'Enregistrer sous'
+3. Dans 'Type de fichier', choisissez 'Classeur Excel (.xlsx)'
+4. Enregistrez et réessayez l'importation
+
+Cette conversion préserve mieux les caractères français (é, à, ç).`);
+            return;
+        }
+        
+        if (fileExtension !== 'xlsx') {
+            alert('Seuls les fichiers XLSX sont autorisés');
             return;
         }
 

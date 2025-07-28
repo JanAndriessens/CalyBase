@@ -1,16 +1,16 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit EXCEL-TO-CSV-CONVERSION');
-console.log('✅ LATEST DEPLOYMENT: Automatic Excel-to-CSV conversion for reliable import');
-console.log('🎯 IF YOU SEE THIS: Excel files now converted to CSV automatically - much more reliable!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit XLSX-ONLY-IMPORT');
+console.log('✅ LATEST DEPLOYMENT: XLSX-only import with French conversion instructions');
+console.log('🎯 IF YOU SEE THIS: Only XLSX files accepted - XLS files get conversion instructions!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'EXCEL-TO-CSV-CONVERSION',
+    commit: 'XLSX-ONLY-IMPORT',
     timestamp: new Date().toISOString(),
-    approach: 'Automatic Excel-to-CSV conversion: Excel → CSV string → parsed data, much more reliable than direct Excel parsing',
+    approach: 'XLSX-only import: Block XLS files, show French conversion instructions, optimize for XLSX format',
     expectedLogs: [
-        '🎯 Excel files now converted to CSV automatically - much more reliable!',
-        '✅ CSV parsing with proper French character preservation',
-        '📋 No more Excel cell boundary or encoding issues'
+        '🎯 Only XLSX files accepted - XLS files get conversion instructions!',
+        '✅ UTF-8 encoding optimized for XLSX format',
+        '📋 French conversion instructions for XLS users'
     ]
 };
