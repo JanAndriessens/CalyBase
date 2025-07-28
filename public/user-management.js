@@ -331,8 +331,11 @@ async function loadPendingUsers() {
         console.log('🔍 User Management: Loading pending users...');
         
         // Filter from already loaded users for efficiency
+        // Only show users with explicit pending status to avoid showing active users
         const pendingUsers = userManagementData.allUsers.filter(user => {
-            return user.status === 'pending' || !user.approved || user.status === 'unknown';
+            const isPending = user.status === 'pending';
+            console.log(`🔍 User ${user.email}: status=${user.status}, approved=${user.approved}, isPending=${isPending}`);
+            return isPending;
         });
         
         console.log('📊 User Management: Found', pendingUsers.length, 'pending users');
