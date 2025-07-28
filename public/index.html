@@ -616,14 +616,13 @@
         </div>
     </div>
 
-    <!-- Scripts - Optimized loading order with defer -->
+    <!-- Scripts - Optimized loading order with proper Firebase initialization -->
+    <!-- CRITICAL: Firebase configuration must load first (synchronously) -->
+    <script src="firebase-config.js"></script>
+    
     <!-- Mobile/Device specific scripts (load early but non-blocking) -->
     <script src="device-utils.js" defer></script>
     <script src="ipad-safari-fix.js" defer></script>
-    
-    <!-- Firebase v9+ Modular SDK - Tree-shakeable and more efficient -->
-    <!-- DISABLED: Conflicts with working Firebase v8 -->
-    <!-- <script type="module" src="firebase-v9.js"></script> -->
     
     <!-- System Configuration (REQUIRED for timeout settings) -->
     <script src="system-config.js" defer></script>
@@ -632,13 +631,14 @@
     <script src="cache-manager.js" defer></script>
     <script src="realtime-manager.js" defer></script>
     
-    <!-- Core app scripts - COPIED FROM WORKING MEMBRES.HTML -->
+    <!-- Firebase SDK and Core Scripts (load after config) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
+    <!-- Core app scripts (load after Firebase SDK) -->
     <script src="clear-cache.js"></script>
-    <script src="firebase-app.js"></script>
-    <script src="system-config.js"></script>
-    <!-- TEMPORARY: Auth disabled for testing -->
-    <!-- <script src="vercel-auth.js" defer></script> -->
-    <!-- Note: auth-guard.js will be updated to use FirebaseManager -->
     <script src="auth-guard.js" defer></script>
     
     <!-- UI and functionality scripts -->
@@ -652,32 +652,46 @@
     <!-- Complete dashboard script with admin functionality -->
     <script src="index.js"></script>
     
-    <!-- EMERGENCY DEBUG: Direct console logging bypassing all other scripts -->
+    <!-- Firebase Initialization Script -->
     <script>
-        console.log('🚨 EMERGENCY DEBUG: Starting direct diagnosis...');
-        
-        // Check if basic globals are available
-        setTimeout(() => {
-            console.log('🔍 EMERGENCY DEBUG: Checking basic availability...');
-            console.log('- window.firebase:', typeof window.firebase);
-            console.log('- window.db:', typeof window.db);
-            console.log('- window.auth:', typeof window.auth);
-            console.log('- window.firebaseConfig:', typeof window.firebaseConfig);
-            
-            // Try a simple database test
-            if (window.db) {
-                console.log('📊 EMERGENCY DEBUG: Testing database connection...');
-                window.db.collection('membres').limit(1).get()
-                    .then(snapshot => {
-                        console.log('✅ EMERGENCY DEBUG: Database works! Size:', snapshot.size);
-                    })
-                    .catch(error => {
-                        console.error('❌ EMERGENCY DEBUG: Database error:', error);
-                    });
-            } else {
-                console.error('❌ EMERGENCY DEBUG: No database available');
+        // Initialize Firebase after config and SDK are loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('🔧 Initializing Firebase...');
+                
+                // Wait for Firebase config to be available
+                if (!window.firebaseConfigPromise) {
+                    throw new Error('Firebase config not available');
+                }
+                
+                const firebaseConfig = await window.firebaseConfigPromise;
+                
+                // Initialize Firebase if not already done  
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log('✅ Firebase initialized successfully');
+                }
+                
+                // Make auth and firestore available globally
+                window.auth = firebase.auth();
+                window.db = firebase.firestore();
+                
+                console.log('✅ Firebase services ready');
+                
+            } catch (error) {
+                console.error('❌ Firebase initialization error:', error);
+                // Show user-friendly error message
+                document.body.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: #e74c3c;">
+                        <h2>Erreur de Configuration</h2>
+                        <p>Impossible de charger Firebase. Veuillez rafraîchir la page.</p>
+                        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Rafraîchir
+                        </button>
+                    </div>
+                `;
             }
-        }, 5000);
+        });
     </script>
 
     <!-- Enhanced Service Worker Registration -->
