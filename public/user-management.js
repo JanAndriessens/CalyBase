@@ -325,9 +325,23 @@ async function loadAllUsers() {
     }
 }
 
-// Load pending users (simplified for now)
+// Load pending users
 async function loadPendingUsers() {
-    return []; // Simplified - no pending users for now
+    try {
+        console.log('🔍 User Management: Loading pending users...');
+        
+        // Filter from already loaded users for efficiency
+        const pendingUsers = userManagementData.allUsers.filter(user => {
+            return user.status === 'pending' || !user.approved || user.status === 'unknown';
+        });
+        
+        console.log('📊 User Management: Found', pendingUsers.length, 'pending users');
+        return pendingUsers;
+        
+    } catch (error) {
+        console.error('❌ Error loading pending users:', error);
+        return [];
+    }
 }
 
 // Calculate statistics
@@ -365,11 +379,57 @@ function updateAllUsersList() {
     updateFilteredUsersList();
 }
 
+// Update pending users display
+function updatePendingUsersList() {
+    const pendingList = document.getElementById('pendingUsersList');
+    if (!pendingList) return;
+    
+    if (userManagementData.pendingUsers.length === 0) {
+        pendingList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h3>Aucune demande en attente</h3>
+                <p>Toutes les demandes d'accès ont été traitées.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    userManagementData.pendingUsers.forEach(user => {
+        const createdDate = user.createdAt ? user.createdAt.toLocaleDateString('fr-FR') : 'Date inconnue';
+        html += `
+            <div class="pending-card">
+                <div class="pending-header">
+                    <div class="pending-email">${user.email}</div>
+                    <div class="pending-date">Demande du ${createdDate}</div>
+                </div>
+                ${user.username ? `<p><strong>Nom d'utilisateur:</strong> ${user.username}</p>` : ''}
+                <p><strong>Statut:</strong> <span class="status-badge ${user.status}">${user.status}</span></p>
+                <p><strong>Email vérifié:</strong> ${user.emailVerified ? 'Oui' : 'Non'}</p>
+                ${user.source ? `<p><strong>Source:</strong> ${user.source}</p>` : ''}
+                <div class="pending-actions">
+                    <button class="btn btn-approve" onclick="approveUser('${user.uid}', '${user.email}')">
+                        <i class="fas fa-check"></i>
+                        <span class="btn-label">Approuver</span>
+                    </button>
+                    <button class="btn btn-reject" onclick="rejectUser('${user.uid}', '${user.email}')">
+                        <i class="fas fa-times"></i>
+                        <span class="btn-label">Refuser</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    pendingList.innerHTML = html;
+}
+
 // Setup basic event listeners
 function setupEventListeners() {
     // Tab switching
     document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', (e) => {
+        button.addEventListener('click', async (e) => {
             // Remove active from all tabs
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -381,6 +441,14 @@ function setupEventListeners() {
             if (content) {
                 content.classList.add('active');
                 console.log('✅ Tab switched to:', tabId);
+                
+                // Special handling for pending users tab
+                if (tabId === 'pending') {
+                    console.log('🔄 Refreshing pending users data...');
+                    // Reload pending users from the already loaded data
+                    userManagementData.pendingUsers = await loadPendingUsers();
+                    updatePendingUsersList();
+                }
             } else {
                 console.log('❌ Tab content not found for:', tabId + '-tab');
             }
@@ -489,6 +557,7 @@ async function loadAllData() {
         calculateStatistics();
         updateStatistics();
         updateAllUsersList();
+        updatePendingUsersList();
         
         console.log('✅ User Management: Data loading complete');
 
@@ -721,6 +790,94 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Approve a pending user
+window.approveUser = async function(uid, email) {
+    try {
+        console.log(`✅ Approving user: ${email} (${uid})`);
+        
+        const userRef = window.db.collection('users').doc(uid);
+        const updateData = {
+            status: 'active',
+            approved: true,
+            approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            approvedBy: window.auth.currentUser.uid
+        };
+        
+        await userRef.update(updateData);
+        
+        console.log('✅ User approved successfully');
+        alert(`✅ Utilisateur ${email} approuvé avec succès!`);
+        
+        // Reload data to refresh all displays
+        await loadAllData();
+        
+    } catch (error) {
+        console.error('❌ Error approving user:', error);
+        alert(`❌ Erreur lors de l'approbation: ${error.message}`);
+    }
+};
+
+// Reject a pending user
+window.rejectUser = async function(uid, email) {
+    // Show rejection reason modal
+    const rejectionModal = document.getElementById('rejectionModal');
+    const confirmButton = document.getElementById('confirmRejection');
+    const reasonTextarea = document.getElementById('rejectionReason');
+    
+    if (!rejectionModal) {
+        // Fallback if modal doesn't exist
+        if (!confirm(`Êtes-vous sûr de vouloir refuser l'accès à ${email}?`)) {
+            return;
+        }
+        await performRejection(uid, email, 'Accès refusé par l\'administrateur');
+        return;
+    }
+    
+    // Clear previous reason
+    reasonTextarea.value = '';
+    
+    // Show modal
+    rejectionModal.style.display = 'block';
+    
+    // Handle confirmation
+    const handleConfirmation = async () => {
+        const reason = reasonTextarea.value.trim() || 'Accès refusé par l\'administrateur';
+        await performRejection(uid, email, reason);
+        rejectionModal.style.display = 'none';
+        confirmButton.removeEventListener('click', handleConfirmation);
+    };
+    
+    confirmButton.addEventListener('click', handleConfirmation);
+};
+
+// Perform the actual rejection
+async function performRejection(uid, email, reason) {
+    try {
+        console.log(`❌ Rejecting user: ${email} (${uid}) - Reason: ${reason}`);
+        
+        const userRef = window.db.collection('users').doc(uid);
+        const updateData = {
+            status: 'rejected',
+            approved: false,
+            rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            rejectedBy: window.auth.currentUser.uid,
+            rejectionReason: reason
+        };
+        
+        await userRef.update(updateData);
+        
+        console.log('❌ User rejected successfully');
+        alert(`❌ Accès refusé pour ${email}`);
+        
+        // Reload data to refresh all displays
+        await loadAllData();
+        
+    } catch (error) {
+        console.error('❌ Error rejecting user:', error);
+        alert(`❌ Erreur lors du refus: ${error.message}`);
+    }
+}
 
 window.deleteUser = async function(uid, email) {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur: ${email}?\n\nCette action est irréversible et supprimera:\n- Le compte Firebase Auth\n- Le document Firestore (si existant)`)) {
