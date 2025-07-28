@@ -230,15 +230,8 @@ async function readExcelFile(file) {
                     console.log(`Row ${i} cell count:`, jsonData[i] ? jsonData[i].length : 0);
                 }
 
-                // Store data and import directly
+                // Store data for processing - do not call continueExcelImport from here
                 window.tempExcelData = jsonData;
-                
-                // Remove loading message before import
-                const loadingMsg = document.getElementById('loading-message');
-                if (loadingMsg) loadingMsg.remove();
-                
-                // Import directly without preview
-                await window.continueExcelImport();
                 resolve();
 
             } catch (error) {
@@ -247,195 +240,6 @@ async function readExcelFile(file) {
             }
         };
 
-        // Add continuation function
-        window.continueExcelImport = async function() {
-            try {
-                const jsonData = window.tempExcelData;
-                if (!jsonData) {
-                    alert('Excel data lost. Please try importing again.');
-                    return;
-                }
-
-                // Create header mapping - map Excel headers to column indices
-                const headers = jsonData[0] || [];
-                console.log('Creating header mapping from:', headers);
-                
-                // Function to find column index by header name (case-insensitive, flexible matching)
-                const findColumnIndex = (headerName) => {
-                    return headers.findIndex(h => 
-                        String(h || '').toLowerCase().trim() === headerName.toLowerCase().trim()
-                    );
-                };
-                
-                // Create mapping of field names to column indices
-                const columnMapping = {
-                    lifrasID: findColumnIndex('LifrasID'),
-                    nrFebras: findColumnIndex('NrFebras'),
-                    nom: findColumnIndex('Nom'),
-                    prenom: findColumnIndex('Prenom'),
-                    adresse: findColumnIndex('Adresse'),
-                    codePostal: findColumnIndex('Code postal'),
-                    localite: findColumnIndex('Localité'),
-                    email1: findColumnIndex('Email'),
-                    telephonePrive: findColumnIndex('Téléphone privé'),
-                    telephoneBureau: findColumnIndex('Téléphone bureau'),
-                    gsm1: findColumnIndex('GSM'),
-                    dateCertificatMedical: findColumnIndex('Date du certificat médical'),
-                    validiteCertificatMedical: findColumnIndex('Validité du certificat médical'),
-                    dateECG: findColumnIndex('Date du ECG'),
-                    validiteECG: findColumnIndex('Validité du ECG'),
-                    ice: findColumnIndex('ICE'),
-                    description: findColumnIndex('Description'),
-                    pays: findColumnIndex('Pays'),
-                    dateNaissance: findColumnIndex('Date de naissance'),
-                    lieuNaissance: findColumnIndex('Lieu de naissance'),
-                    langue: findColumnIndex('Langue'),
-                    nationalite: findColumnIndex('Nationalité'),
-                    newsletter: findColumnIndex('Newsletter'),
-                    typeCertif1: findColumnIndex('Type de certif'),
-                    plongeur: findColumnIndex('Plongeur'),
-                    apneiste: findColumnIndex('Apnéiste'),
-                    gasBlender: findColumnIndex('Gas Blender'),
-                    nitrox: findColumnIndex('Nitrox'),
-                    plongeeSouterraine: findColumnIndex('Plongée Souterraine'),
-                    plongeurAdapte: findColumnIndex('Plongeur Adapté'),
-                    qualificationPPA: findColumnIndex('Qualification PPA'),
-                    qualificationVE: findColumnIndex('Qualification VE'),
-                    techniqueSubaquatique: findColumnIndex('Technique Subaquatique'),
-                    trimix: findColumnIndex('Trimix'),
-                    dateDerniereInscription: findColumnIndex('Date dernière inscription'),
-                    validiteCFPS: findColumnIndex('Validité CFPS'),
-                    adeps: findColumnIndex('ADEPS'),
-                    plongeeEnfantEncadrant: findColumnIndex('Plongée enfant encadrant'),
-                    photographe: findColumnIndex('Photographe'),
-                    archeologue: findColumnIndex('Archéologue'),
-                    medecin: findColumnIndex('Médecin'),
-                    derniereModif: findColumnIndex('Dernière modif'),
-                    licenceFD: findColumnIndex('Licence FD')
-                };
-                
-                console.log('Column mapping created:', columnMapping);
-                
-                // Handle duplicate fields by finding multiple instances
-                const emailIndices = [];
-                const gsmIndices = [];
-                const typeCertifIndices = [];
-                
-                headers.forEach((header, index) => {
-                    const headerStr = String(header || '').toLowerCase().trim();
-                    if (headerStr === 'email') emailIndices.push(index);
-                    if (headerStr === 'gsm') gsmIndices.push(index);
-                    if (headerStr === 'type de certif') typeCertifIndices.push(index);
-                });
-                
-                console.log('Duplicate field indices:', { emailIndices, gsmIndices, typeCertifIndices });
-
-                // Verwerk de data, beginnend vanaf de tweede rij (index 1)
-                const processedData = jsonData.slice(1).map((row, index) => {
-                    console.log(`Processing row ${index + 1}:`, row);
-                    
-                    if (!row || !row[columnMapping.lifrasID]) {
-                        console.log(`Skipping empty row ${index + 1} (no LifrasID)`);
-                        return null;
-                    }
-
-                    // Function to get cleaned cell value by column index
-                    const getCleanValue = (colIndex) => {
-                        if (colIndex === -1 || !row[colIndex]) return '';
-                        
-                        const cell = row[colIndex];
-                        if (cell === undefined || cell === null) return '';
-                        
-                        const str = String(cell);
-                        const cleaned = str
-                            .replace(/¡/g, 'i')
-                            .replace(/<[^>]*>/g, '')      // Remove HTML tags like <td>, </td>
-                            .replace(/&[^;]+;/g, '')      // Remove HTML entities like &nbsp;
-                            .replace(/[\u4e00-\u9fff]/g, '') // Remove Chinese characters (encoding artifacts)
-                            .replace(/[\u3400-\u4dbf]/g, '') // Remove Chinese extension characters
-                            .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
-                            .replace(/\s+/g, ' ')         // Normalize multiple spaces to single space
-                            .trim();
-                        
-                        return cleaned;
-                    };
-
-                    // Create object using header-based mapping
-                    const processedRow = {
-                        lifrasID: getCleanValue(columnMapping.lifrasID),
-                        nrFebras: getCleanValue(columnMapping.nrFebras),
-                        nom: getCleanValue(columnMapping.nom),
-                        prenom: getCleanValue(columnMapping.prenom),
-                        adresse: getCleanValue(columnMapping.adresse),
-                        codePostal: getCleanValue(columnMapping.codePostal),
-                        localite: getCleanValue(columnMapping.localite),
-                        email1: getCleanValue(emailIndices[0] || -1),
-                        email2: getCleanValue(emailIndices[1] || -1),
-                        email3: getCleanValue(emailIndices[2] || -1),
-                        telephonePrive: getCleanValue(columnMapping.telephonePrive),
-                        telephoneBureau: getCleanValue(columnMapping.telephoneBureau),
-                        gsm1: getCleanValue(gsmIndices[0] || -1),
-                        gsm2: getCleanValue(gsmIndices[1] || -1),
-                        gsm3: getCleanValue(gsmIndices[2] || -1),
-                        dateCertificatMedical: getCleanValue(columnMapping.dateCertificatMedical),
-                        validiteCertificatMedical: getCleanValue(columnMapping.validiteCertificatMedical),
-                        dateECG: getCleanValue(columnMapping.dateECG),
-                        validiteECG: getCleanValue(columnMapping.validiteECG),
-                        ice: getCleanValue(columnMapping.ice),
-                        description: getCleanValue(columnMapping.description),
-                        pays: getCleanValue(columnMapping.pays),
-                        dateNaissance: getCleanValue(columnMapping.dateNaissance),
-                        lieuNaissance: getCleanValue(columnMapping.lieuNaissance),
-                        langue: getCleanValue(columnMapping.langue),
-                        nationalite: getCleanValue(columnMapping.nationalite),
-                        newsletter: getCleanValue(columnMapping.newsletter),
-                        typeCertif1: getCleanValue(typeCertifIndices[0] || -1),
-                        typeCertif2: getCleanValue(typeCertifIndices[1] || -1),
-                        plongeur: getCleanValue(columnMapping.plongeur),
-                        apneiste: getCleanValue(columnMapping.apneiste),
-                        gasBlender: getCleanValue(columnMapping.gasBlender),
-                        nitrox: getCleanValue(columnMapping.nitrox),
-                        plongeeSouterraine: getCleanValue(columnMapping.plongeeSouterraine),
-                        plongeurAdapte: getCleanValue(columnMapping.plongeurAdapte),
-                        qualificationPPA: getCleanValue(columnMapping.qualificationPPA),
-                        qualificationVE: getCleanValue(columnMapping.qualificationVE),
-                        techniqueSubaquatique: getCleanValue(columnMapping.techniqueSubaquatique),
-                        trimix: getCleanValue(columnMapping.trimix),
-                        dateDerniereInscription: getCleanValue(columnMapping.dateDerniereInscription),
-                        validiteCFPS: getCleanValue(columnMapping.validiteCFPS),
-                        adeps: getCleanValue(columnMapping.adeps),
-                        plongeeEnfantEncadrant: getCleanValue(columnMapping.plongeeEnfantEncadrant),
-                        photographe: getCleanValue(columnMapping.photographe),
-                        archeologue: getCleanValue(columnMapping.archeologue),
-                        medecin: getCleanValue(columnMapping.medecin),
-                        derniereModif: getCleanValue(columnMapping.derniereModif),
-                        licenceFD: getCleanValue(columnMapping.licenceFD)
-                    };
-
-                    console.log('Processed row:', processedRow);
-                    return processedRow;
-                }).filter(row => row !== null);
-
-                console.log('Final processed data:', processedData);
-                console.log('Number of processed rows:', processedData.length);
-                
-                if (processedData.length === 0) {
-                    console.error('No data was processed from the Excel file');
-                    alert('No data was processed from the Excel file');
-                    return;
-                }
-
-                // Continue with import after user confirmation
-                console.log('User confirmed import, proceeding...');
-                await importMembres(processedData);
-                await loadMembers(); // Refresh the display
-                alert(`✅ Import successful! ${processedData.length} members imported.`);
-                
-            } catch (error) {
-                console.error('Error processing Excel file:', error);
-                alert('Error processing Excel file: ' + error.message);
-            }
-        };
 
         // Don't auto-resolve anymore - wait for user confirmation
         // resolve(processedData) is removed
@@ -448,6 +252,204 @@ async function readExcelFile(file) {
         reader.readAsArrayBuffer(file);
     });
 }
+
+// Excel import continuation function - moved to global scope
+window.continueExcelImport = async function() {
+    try {
+        const jsonData = window.tempExcelData;
+        if (!jsonData) {
+            alert('Excel data lost. Please try importing again.');
+            return;
+        }
+
+        // Remove loading message before processing
+        const loadingMsg = document.getElementById('loading-message');
+        if (loadingMsg) loadingMsg.remove();
+
+        // Create header mapping - map Excel headers to column indices
+        const headers = jsonData[0] || [];
+        console.log('Creating header mapping from:', headers);
+        
+        // Function to find column index by header name (case-insensitive, flexible matching)
+        const findColumnIndex = (headerName) => {
+            return headers.findIndex(h => 
+                String(h || '').toLowerCase().trim() === headerName.toLowerCase().trim()
+            );
+        };
+        
+        // Create mapping of field names to column indices
+        const columnMapping = {
+            lifrasID: findColumnIndex('LifrasID'),
+            nrFebras: findColumnIndex('NrFebras'),
+            nom: findColumnIndex('Nom'),
+            prenom: findColumnIndex('Prenom'),
+            adresse: findColumnIndex('Adresse'),
+            codePostal: findColumnIndex('Code postal'),
+            localite: findColumnIndex('Localité'),
+            email1: findColumnIndex('Email'),
+            telephonePrive: findColumnIndex('Téléphone privé'),
+            telephoneBureau: findColumnIndex('Téléphone bureau'),
+            gsm1: findColumnIndex('GSM'),
+            dateCertificatMedical: findColumnIndex('Date du certificat médical'),
+            validiteCertificatMedical: findColumnIndex('Validité du certificat médical'),
+            dateECG: findColumnIndex('Date du ECG'),
+            validiteECG: findColumnIndex('Validité du ECG'),
+            ice: findColumnIndex('ICE'),
+            description: findColumnIndex('Description'),
+            pays: findColumnIndex('Pays'),
+            dateNaissance: findColumnIndex('Date de naissance'),
+            lieuNaissance: findColumnIndex('Lieu de naissance'),
+            langue: findColumnIndex('Langue'),
+            nationalite: findColumnIndex('Nationalité'),
+            newsletter: findColumnIndex('Newsletter'),
+            typeCertif1: findColumnIndex('Type de certif'),
+            plongeur: findColumnIndex('Plongeur'),
+            apneiste: findColumnIndex('Apnéiste'),
+            gasBlender: findColumnIndex('Gas Blender'),
+            nitrox: findColumnIndex('Nitrox'),
+            plongeeSouterraine: findColumnIndex('Plongée Souterraine'),
+            plongeurAdapte: findColumnIndex('Plongeur Adapté'),
+            qualificationPPA: findColumnIndex('Qualification PPA'),
+            qualificationVE: findColumnIndex('Qualification VE'),
+            techniqueSubaquatique: findColumnIndex('Technique Subaquatique'),
+            trimix: findColumnIndex('Trimix'),
+            dateDerniereInscription: findColumnIndex('Date dernière inscription'),
+            validiteCFPS: findColumnIndex('Validité CFPS'),
+            adeps: findColumnIndex('ADEPS'),
+            plongeeEnfantEncadrant: findColumnIndex('Plongée enfant encadrant'),
+            photographe: findColumnIndex('Photographe'),
+            archeologue: findColumnIndex('Archéologue'),
+            medecin: findColumnIndex('Médecin'),
+            derniereModif: findColumnIndex('Dernière modif'),
+            licenceFD: findColumnIndex('Licence FD')
+        };
+        
+        console.log('Column mapping created:', columnMapping);
+        
+        // Handle duplicate fields by finding multiple instances
+        const emailIndices = [];
+        const gsmIndices = [];
+        const typeCertifIndices = [];
+        
+        headers.forEach((header, index) => {
+            const headerStr = String(header || '').toLowerCase().trim();
+            if (headerStr === 'email') emailIndices.push(index);
+            if (headerStr === 'gsm') gsmIndices.push(index);
+            if (headerStr === 'type de certif') typeCertifIndices.push(index);
+        });
+        
+        console.log('Duplicate field indices:', { emailIndices, gsmIndices, typeCertifIndices });
+
+        // Process the data, starting from row 1 (skip headers)
+        const processedData = jsonData.slice(1).map((row, index) => {
+            console.log(`Processing row ${index + 1}:`, row);
+            
+            if (!row || !row[columnMapping.lifrasID]) {
+                console.log(`Skipping empty row ${index + 1} (no LifrasID)`);
+                return null;
+            }
+
+            // Function to get cleaned cell value by column index
+            const getCleanValue = (colIndex) => {
+                if (colIndex === -1 || !row[colIndex]) return '';
+                
+                const cell = row[colIndex];
+                if (cell === undefined || cell === null) return '';
+                
+                const str = String(cell);
+                const cleaned = str
+                    .replace(/¡/g, 'i')
+                    .replace(/<[^>]*>/g, '')      // Remove HTML tags like <td>, </td>
+                    .replace(/&[^;]+;/g, '')      // Remove HTML entities like &nbsp;
+                    .replace(/[\u4e00-\u9fff]/g, '') // Remove Chinese characters (encoding artifacts)
+                    .replace(/[\u3400-\u4dbf]/g, '') // Remove Chinese extension characters
+                    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+                    .replace(/\s+/g, ' ')         // Normalize multiple spaces to single space
+                    .trim();
+                
+                return cleaned;
+            };
+
+            // Create object using header-based mapping
+            const processedRow = {
+                lifrasID: getCleanValue(columnMapping.lifrasID),
+                nrFebras: getCleanValue(columnMapping.nrFebras),
+                nom: getCleanValue(columnMapping.nom),
+                prenom: getCleanValue(columnMapping.prenom),
+                adresse: getCleanValue(columnMapping.adresse),
+                codePostal: getCleanValue(columnMapping.codePostal),
+                localite: getCleanValue(columnMapping.localite),
+                email1: getCleanValue(emailIndices[0] || -1),
+                email2: getCleanValue(emailIndices[1] || -1),
+                email3: getCleanValue(emailIndices[2] || -1),
+                telephonePrive: getCleanValue(columnMapping.telephonePrive),
+                telephoneBureau: getCleanValue(columnMapping.telephoneBureau),
+                gsm1: getCleanValue(gsmIndices[0] || -1),
+                gsm2: getCleanValue(gsmIndices[1] || -1),
+                gsm3: getCleanValue(gsmIndices[2] || -1),
+                dateCertificatMedical: getCleanValue(columnMapping.dateCertificatMedical),
+                validiteCertificatMedical: getCleanValue(columnMapping.validiteCertificatMedical),
+                dateECG: getCleanValue(columnMapping.dateECG),
+                validiteECG: getCleanValue(columnMapping.validiteECG),
+                ice: getCleanValue(columnMapping.ice),
+                description: getCleanValue(columnMapping.description),
+                pays: getCleanValue(columnMapping.pays),
+                dateNaissance: getCleanValue(columnMapping.dateNaissance),
+                lieuNaissance: getCleanValue(columnMapping.lieuNaissance),
+                langue: getCleanValue(columnMapping.langue),
+                nationalite: getCleanValue(columnMapping.nationalite),
+                newsletter: getCleanValue(columnMapping.newsletter),
+                typeCertif1: getCleanValue(typeCertifIndices[0] || -1),
+                typeCertif2: getCleanValue(typeCertifIndices[1] || -1),
+                plongeur: getCleanValue(columnMapping.plongeur),
+                apneiste: getCleanValue(columnMapping.apneiste),
+                gasBlender: getCleanValue(columnMapping.gasBlender),
+                nitrox: getCleanValue(columnMapping.nitrox),
+                plongeeSouterraine: getCleanValue(columnMapping.plongeeSouterraine),
+                plongeurAdapte: getCleanValue(columnMapping.plongeurAdapte),
+                qualificationPPA: getCleanValue(columnMapping.qualificationPPA),
+                qualificationVE: getCleanValue(columnMapping.qualificationVE),
+                techniqueSubaquatique: getCleanValue(columnMapping.techniqueSubaquatique),
+                trimix: getCleanValue(columnMapping.trimix),
+                dateDerniereInscription: getCleanValue(columnMapping.dateDerniereInscription),
+                validiteCFPS: getCleanValue(columnMapping.validiteCFPS),
+                adeps: getCleanValue(columnMapping.adeps),
+                plongeeEnfantEncadrant: getCleanValue(columnMapping.plongeeEnfantEncadrant),
+                photographe: getCleanValue(columnMapping.photographe),
+                archeologue: getCleanValue(columnMapping.archeologue),
+                medecin: getCleanValue(columnMapping.medecin),
+                derniereModif: getCleanValue(columnMapping.derniereModif),
+                licenceFD: getCleanValue(columnMapping.licenceFD)
+            };
+
+            console.log('Processed row:', processedRow);
+            return processedRow;
+        }).filter(row => row !== null);
+
+        console.log('Final processed data:', processedData);
+        console.log('Number of processed rows:', processedData.length);
+        
+        if (processedData.length === 0) {
+            console.error('No data was processed from the Excel file');
+            alert('No data was processed from the Excel file');
+            return;
+        }
+
+        // Import the data
+        console.log('Proceeding with import...');
+        await importMembres(processedData);
+        await loadMembers(); // Refresh the display
+        alert(`✅ Import successful! ${processedData.length} members imported.`);
+        
+    } catch (error) {
+        console.error('Error processing Excel file:', error);
+        alert('Error processing Excel file: ' + error.message);
+        
+        // Clean up loading message on error
+        const loadingMsg = document.getElementById('loading-message');
+        if (loadingMsg) loadingMsg.remove();
+    }
+};
 
 async function importMembres(data) {
     try {
@@ -1187,17 +1189,17 @@ if (importExcelBtn && excelFileInput) {
             loadingMessage.textContent = 'Importation en cours...';
             document.body.appendChild(loadingMessage);
 
+            // First parse the Excel file
             await readExcelFile(file);
             
-            // Remove loading message
-            const msg = document.getElementById('loading-message');
-            if (msg) msg.remove();
+            // Then process and import the data
+            await window.continueExcelImport();
             
         } catch (error) {
             console.error('Erreur lors de l\'importation:', error);
             alert('Erreur lors de l\'importation: ' + error.message);
             
-            // Remove loading message
+            // Remove loading message on error
             const msg = document.getElementById('loading-message');
             if (msg) msg.remove();
         }
