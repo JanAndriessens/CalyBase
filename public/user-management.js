@@ -757,7 +757,7 @@ setTimeout(() => {
     initUserManagement();
 }, 1000); // Increased delay to avoid conflicts 
 
-window.editUser = function(uid) {
+window.editUser = async function(uid) {
     // Find the user data
     const user = userManagementData.allUsers.find(u => u.uid === uid);
     if (!user) {
@@ -767,11 +767,33 @@ window.editUser = function(uid) {
 
     console.log('✏️ Editing user:', user);
 
+    // Get current user's role to determine available options
+    const currentUserRole = await getCurrentUserRole();
+    
     // Populate the edit modal
     document.getElementById('editUserEmail').value = user.email || '';
     document.getElementById('editUserUsername').value = user.username || '';
-    document.getElementById('editUserRole').value = user.role || 'user';
     document.getElementById('editUserStatus').value = user.status || 'active';
+
+    // Dynamically populate role dropdown based on current user's permissions
+    const roleSelect = document.getElementById('editUserRole');
+    roleSelect.innerHTML = ''; // Clear existing options
+    
+    // Always allow user role
+    roleSelect.innerHTML += '<option value="user">Utilisateur</option>';
+    
+    // Only admins and superAdmins can assign admin role
+    if (currentUserRole === 'admin' || currentUserRole === 'superAdmin') {
+        roleSelect.innerHTML += '<option value="admin">Administrateur</option>';
+    }
+    
+    // Only superAdmins can assign superAdmin role
+    if (currentUserRole === 'superAdmin') {
+        roleSelect.innerHTML += '<option value="superAdmin">Super Administrateur</option>';
+    }
+    
+    // Set the current user's role
+    roleSelect.value = user.role || 'user';
 
     // Store the UID in the modal for later use
     const modal = document.getElementById('editUserModal');
@@ -802,6 +824,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const status = document.getElementById('editUserStatus').value;
 
                 console.log('💾 Saving user changes:', { uid, username, role, status });
+
+                // Validate role assignment permissions
+                const currentUserRole = await getCurrentUserRole();
+                
+                // Prevent unauthorized role assignments
+                if (role === 'superAdmin' && currentUserRole !== 'superAdmin') {
+                    alert('❌ Erreur: Seuls les Super Administrateurs peuvent assigner le rôle Super Administrateur');
+                    return;
+                }
+                
+                if (role === 'admin' && currentUserRole !== 'admin' && currentUserRole !== 'superAdmin') {
+                    alert('❌ Erreur: Seuls les Administrateurs et Super Administrateurs peuvent assigner le rôle Administrateur');
+                    return;
+                }
 
                 // Update user in Firestore
                 const userRef = window.db.collection('users').doc(uid);
