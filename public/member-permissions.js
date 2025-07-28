@@ -192,8 +192,8 @@ class MemberPermissions {
                     canDeleteMembers: false,
                     canModifyMembers: false,
                     canViewMembers: true,
-                    canManageMemberAvatars: false,
-                    canViewMemberDetails: false,
+                    canManageMemberAvatars: true,
+                    canViewMemberDetails: true,
                     canCreateMembers: false,
                     canBulkDeleteMembers: false
                 }
