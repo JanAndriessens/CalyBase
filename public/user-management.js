@@ -15,6 +15,18 @@ let userManagementData = {
     statistics: { total: 0, pending: 0, active: 0, suspended: 0 }
 };
 
+// Translate status values to French
+function translateStatus(status) {
+    const translations = {
+        'pending': 'en attente',
+        'active': 'actif',
+        'suspended': 'suspendu',
+        'rejected': 'refusé',
+        'unknown': 'inconnu'
+    };
+    return translations[status] || status;
+}
+
 // SECURITY: Check if current user has admin permissions
 async function checkAdminPermissions() {
     try {
@@ -408,7 +420,7 @@ function updatePendingUsersList() {
                     <div class="pending-date">Demande du ${createdDate}</div>
                 </div>
                 ${user.username ? `<p><strong>Nom d'utilisateur:</strong> ${user.username}</p>` : ''}
-                <p><strong>Statut:</strong> <span class="status-badge ${user.status}">${user.status}</span></p>
+                <p><strong>Statut:</strong> <span class="status-badge ${user.status}">${translateStatus(user.status)}</span></p>
                 <p><strong>Email vérifié:</strong> ${user.emailVerified ? 'Oui' : 'Non'}</p>
                 ${user.source ? `<p><strong>Source:</strong> ${user.source}</p>` : ''}
                 <div class="pending-actions">
@@ -513,7 +525,7 @@ function updateFilteredUsersList() {
             <td>${user.username || '-'}</td>
             <td>${user.email}</td>
             <td><span class="role-badge ${user.role}">${user.role}</span></td>
-            <td><span class="status-badge ${user.status}">${user.status}</span></td>
+            <td><span class="status-badge ${user.status}">${translateStatus(user.status)}</span></td>
             <td>${user.createdAt ? user.createdAt.toLocaleDateString('fr-FR') : '-'}</td>
             <td>${user.lastLogin ? user.lastLogin.toLocaleDateString('fr-FR') : '-'}</td>
             <td>
