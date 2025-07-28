@@ -1,16 +1,16 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit EXCEL-FRENCH-ACCENT-FIX');
-console.log('✅ LATEST DEPLOYMENT: Fixed French accent character encoding in Excel import');
-console.log('🎯 IF YOU SEE THIS: Names like "Léa" should preserve accents and not corrupt column boundaries!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit EXCEL-TO-CSV-CONVERSION');
+console.log('✅ LATEST DEPLOYMENT: Automatic Excel-to-CSV conversion for reliable import');
+console.log('🎯 IF YOU SEE THIS: Excel files now converted to CSV automatically - much more reliable!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'EXCEL-FRENCH-ACCENT-FIX',
+    commit: 'EXCEL-TO-CSV-CONVERSION',
     timestamp: new Date().toISOString(),
-    approach: 'Fixed French accent character encoding: Windows-1252 codepage, preserved Latin-1 characters, enhanced address patterns',
+    approach: 'Automatic Excel-to-CSV conversion: Excel → CSV string → parsed data, much more reliable than direct Excel parsing',
     expectedLogs: [
-        '🎯 Names like "Léa" should preserve accents and not corrupt column boundaries!',
-        '✅ French characters (é, è, à, ç) properly preserved during Excel parsing',
-        '📋 Column boundaries respected even with accented characters'
+        '🎯 Excel files now converted to CSV automatically - much more reliable!',
+        '✅ CSV parsing with proper French character preservation',
+        '📋 No more Excel cell boundary or encoding issues'
     ]
 };

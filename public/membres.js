@@ -179,6 +179,58 @@ document.addEventListener('DOMContentLoaded', async () => {
  * 47. Dernière modif.
  * 48. Licence FD
  */
+
+// Parse CSV data into JSON format for processing
+function parseCSVData(csvString) {
+    console.log('Starting CSV parsing...');
+    
+    if (!csvString || typeof csvString !== 'string') {
+        console.error('Invalid CSV data');
+        return [];
+    }
+    
+    // Split into lines and filter out empty lines
+    const lines = csvString.split('\n').filter(line => line.trim().length > 0);
+    console.log('CSV lines found:', lines.length);
+    
+    if (lines.length === 0) {
+        console.error('No data lines found in CSV');
+        return [];
+    }
+    
+    // Parse each line into fields using tab separator
+    const jsonData = lines.map((line, index) => {
+        // Split by tab and clean each field
+        const fields = line.split('\t').map(field => {
+            // Clean each field while preserving French accents
+            let cleaned = field.trim()
+                // Remove HTML tags and artifacts
+                .replace(/<\/?[^>]+(>|$)/g, '')
+                .replace(/&[a-zA-Z0-9#]+;/g, '')
+                .replace(/\/?td>/g, '')
+                .replace(/\/?tr>/g, '')
+                .replace(/\/?table>/g, '')
+                // Remove problematic encoding artifacts but preserve French characters
+                .replace(/[\u4e00-\u9fff]/g, '')
+                .replace(/[\u3400-\u4dbf]/g, '')
+                .replace(/[\uf900-\ufaff]/g, '')
+                // Remove control characters but preserve French accents (Latin-1 Supplement U+0080-U+00FF)
+                .replace(/[\x00-\x1F\x7F]/g, '')
+                // Normalize whitespace
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            return cleaned;
+        });
+        
+        console.log(`Parsed CSV row ${index}:`, fields);
+        return fields;
+    });
+    
+    console.log('CSV parsing complete');
+    return jsonData;
+}
+
 async function readExcelFile(file) {
     return new Promise((resolve, reject) => {
         // Check if XLSX library is available
@@ -214,18 +266,22 @@ async function readExcelFile(file) {
                 console.log('Workbook sheets:', workbook.SheetNames);
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 
-                // Convert to JSON with French character preservation
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
-                    raw: false,       // Preserve formatted text (includes French accents)
-                    defval: '',
-                    dateNF: 'yyyy-mm-dd',
-                    header: 1,
-                    blankrows: false
+                // Convert Excel to CSV format for more reliable parsing
+                console.log('Converting Excel to CSV format...');
+                const csvData = XLSX.utils.sheet_to_csv(firstSheet, {
+                    FS: '\t',         // Use tab separator for better field separation
+                    RS: '\n',         // Use newline for row separation
+                    dateNF: 'yyyy-mm-dd'
                 });
 
-                console.log('Raw Excel data:', jsonData);
+                console.log('CSV conversion complete. First 500 characters:', csvData.substring(0, 500));
+                
+                // Parse CSV data into structured format
+                const jsonData = parseCSVData(csvData);
+
+                console.log('Parsed CSV data:', jsonData);
                 console.log('Number of rows:', jsonData.length);
-                console.log('Excel headers:', jsonData[0]); // Debug: toon headers
+                console.log('CSV headers:', jsonData[0]); // Debug: show headers
                 console.log('First few rows for debugging:');
                 for (let i = 1; i <= Math.min(3, jsonData.length - 1); i++) {
                     console.log(`Row ${i}:`, jsonData[i]);
@@ -351,36 +407,15 @@ window.continueExcelImport = async function() {
                 return null;
             }
 
-            // Function to get cleaned cell value by column index
+            // Function to get cell value by column index (CSV data is already cleaned)
             const getCleanValue = (colIndex) => {
                 if (colIndex === -1 || !row[colIndex]) return '';
                 
                 const cell = row[colIndex];
                 if (cell === undefined || cell === null) return '';
                 
-                const str = String(cell);
-                let cleaned = str
-                    // Remove HTML tags and artifacts first
-                    .replace(/<\/?[^>]+(>|$)/g, '')   // Remove HTML tags like <td>, </td>, /td>
-                    .replace(/&[a-zA-Z0-9#]+;/g, '')  // Remove HTML entities like &nbsp;
-                    .replace(/\/?td>/g, '')           // Remove /td> artifacts specifically
-                    .replace(/\/?tr>/g, '')           // Remove /tr> artifacts  
-                    .replace(/\/?table>/g, '')        // Remove /table> artifacts
-                    
-                    // Remove problematic encoding artifacts but PRESERVE French characters
-                    .replace(/[\u4e00-\u9fff]/g, '')  // Remove Chinese characters (encoding artifacts)
-                    .replace(/[\u3400-\u4dbf]/g, '')  // Remove Chinese extension characters
-                    .replace(/[\uf900-\ufaff]/g, '')  // Remove CJK compatibility characters
-                    
-                    // Remove control characters but PRESERVE French accents (é, è, à, ç, etc.)
-                    // French accents are in Latin-1 Supplement (U+0080-U+00FF) - keep these!
-                    .replace(/[\x00-\x1F\x7F]/g, '')  // Remove ASCII control characters only
-                    
-                    // Normalize whitespace
-                    .replace(/\s+/g, ' ')             // Normalize multiple spaces to single space
-                    .trim();
-                
-                return cleaned;
+                // CSV data is already cleaned, just return as string
+                return String(cell).trim();
             };
 
             // Special function to extract first name from corrupted data
