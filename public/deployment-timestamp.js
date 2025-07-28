@@ -1,16 +1,16 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit EXCEL-FIRSTNAME-ADDRESS-FIX');
-console.log('✅ LATEST DEPLOYMENT: Fixed firstname/address data corruption in Excel import');
-console.log('🎯 IF YOU SEE THIS: Names like "Aliz" should no longer have address data mixed in!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit EXCEL-FRENCH-ACCENT-FIX');
+console.log('✅ LATEST DEPLOYMENT: Fixed French accent character encoding in Excel import');
+console.log('🎯 IF YOU SEE THIS: Names like "Léa" should preserve accents and not corrupt column boundaries!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'EXCEL-FIRSTNAME-ADDRESS-FIX',
+    commit: 'EXCEL-FRENCH-ACCENT-FIX',
     timestamp: new Date().toISOString(),
-    approach: 'Fixed firstname/address data corruption: enhanced cleaning, added extractFirstName function to separate merged data',
+    approach: 'Fixed French accent character encoding: Windows-1252 codepage, preserved Latin-1 characters, enhanced address patterns',
     expectedLogs: [
-        '🎯 Names like "Aliz" should no longer have address data mixed in!',
-        '✅ Enhanced HTML tag cleaning with /td> /tr> patterns',
-        '📋 Smart firstname extraction from corrupted Excel cells'
+        '🎯 Names like "Léa" should preserve accents and not corrupt column boundaries!',
+        '✅ French characters (é, è, à, ç) properly preserved during Excel parsing',
+        '📋 Column boundaries respected even with accented characters'
     ]
 };

@@ -196,25 +196,27 @@ async function readExcelFile(file) {
                 console.log('XLSX library version:', XLSX.version);
                 const data = new Uint8Array(e.target.result);
                 
-                // Enhanced options for SheetJS with better encoding handling
+                // Enhanced options for SheetJS with French character support
                 const workbook = XLSX.read(data, { 
                     type: 'array',
-                    codepage: 65001, // UTF-8 encoding for better international character support
+                    codepage: 1252,   // Windows-1252 (Western European) for better French character support
                     cellDates: true,
                     cellNF: false,
                     cellText: true,   // Use formatted text to preserve encoding
                     WTF: false,       // Don't write through formatting errors
-                    raw: false,
+                    raw: false,       // Keep as false to preserve French accents
                     cellFormula: false,
-                    cellHTML: false   // Don't parse HTML content
+                    cellHTML: false,  // Don't parse HTML content
+                    FS: '\t',         // Force tab separator to respect cell boundaries
+                    dense: false      // Use standard format for better parsing
                 });
 
                 console.log('Workbook sheets:', workbook.SheetNames);
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 
-                // Converteer naar JSON met specifieke opties
+                // Convert to JSON with French character preservation
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
-                    raw: false,
+                    raw: false,       // Preserve formatted text (includes French accents)
                     defval: '',
                     dateNF: 'yyyy-mm-dd',
                     header: 1,
@@ -358,16 +360,23 @@ window.continueExcelImport = async function() {
                 
                 const str = String(cell);
                 let cleaned = str
-                    .replace(/¡/g, 'i')
+                    // Remove HTML tags and artifacts first
                     .replace(/<\/?[^>]+(>|$)/g, '')   // Remove HTML tags like <td>, </td>, /td>
                     .replace(/&[a-zA-Z0-9#]+;/g, '')  // Remove HTML entities like &nbsp;
+                    .replace(/\/?td>/g, '')           // Remove /td> artifacts specifically
+                    .replace(/\/?tr>/g, '')           // Remove /tr> artifacts  
+                    .replace(/\/?table>/g, '')        // Remove /table> artifacts
+                    
+                    // Remove problematic encoding artifacts but PRESERVE French characters
                     .replace(/[\u4e00-\u9fff]/g, '')  // Remove Chinese characters (encoding artifacts)
                     .replace(/[\u3400-\u4dbf]/g, '')  // Remove Chinese extension characters
                     .replace(/[\uf900-\ufaff]/g, '')  // Remove CJK compatibility characters
-                    .replace(/[\x00-\x1F\x7F]/g, '')  // Remove control characters
-                    .replace(/\/?td>/g, '')           // Remove /td> artifacts specifically
-                    .replace(/\/?tr>/g, '')           // Remove /tr> artifacts
-                    .replace(/\/?table>/g, '')        // Remove /table> artifacts
+                    
+                    // Remove control characters but PRESERVE French accents (é, è, à, ç, etc.)
+                    // French accents are in Latin-1 Supplement (U+0080-U+00FF) - keep these!
+                    .replace(/[\x00-\x1F\x7F]/g, '')  // Remove ASCII control characters only
+                    
+                    // Normalize whitespace
                     .replace(/\s+/g, ' ')             // Normalize multiple spaces to single space
                     .trim();
                 
@@ -380,7 +389,7 @@ window.continueExcelImport = async function() {
                 if (!fullValue) return '';
                 
                 // If the value contains address-like patterns, extract only the first part (likely the name)
-                const addressPatterns = /\b\d{4}\b|\bWavre\b|\bBruxelles\b|\bLiège\b|\bChaussée\b|\bRue\b|\bAvenue\b|\bBoulevard\b/i;
+                const addressPatterns = /\b\d{4}\b|\bWavre\b|\bBruxelles\b|\bLiège\b|\bChaussée\b|\bChainia\b|\bMartyrs\b|\bRue\b|\bAvenue\b|\bBoulevard\b|\bdu\b|\bde\b|\bdes\b/i;
                 
                 if (addressPatterns.test(fullValue)) {
                     // Split on common separators and take the first meaningful part
