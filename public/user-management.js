@@ -548,14 +548,16 @@ async function loadAllData() {
     try {
         console.log('🔍 User Management: Starting data load...');
         
-        const [allUsers, pendingUsers] = await Promise.all([
-            loadAllUsers(),
-            loadPendingUsers()
-        ]);
-
+        // Load all users first (required for pending users filter)
+        console.log('🔍 User Management: Loading all users...');
+        const allUsers = await loadAllUsers();
         userManagementData.allUsers = allUsers;
-        userManagementData.pendingUsers = pendingUsers;
         userManagementData.filteredUsers = allUsers;
+        
+        // Then filter pending users from the loaded data
+        console.log('🔍 User Management: Filtering pending users...');
+        const pendingUsers = await loadPendingUsers();
+        userManagementData.pendingUsers = pendingUsers;
 
         calculateStatistics();
         updateStatistics();
