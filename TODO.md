@@ -235,92 +235,136 @@ Complete GitHub Desktop + Vercel integration allowing easy visual commits and au
 
 ---
 
-## 🖼️ Avatar Loading System Overhaul - COMPLETED
+## 🔐 Social Login Integration - IMPLEMENTATION COMPLETED
 
-### Issue Identified: July 21, 2025
-- **Problem**: Avatar images sometimes showing "picture missing" instead of default avatar
-- **Root Cause**: Multiple failure points in avatar loading pipeline
-  - Firebase Storage CORS issues blocking some avatar URLs
-  - Network failures not handled gracefully
-  - Race conditions between initial load and Firebase updates in table views
-  - Missing fallback systems for various failure scenarios
+### Issue: July 28, 2025
+**Request**: Add Google and Apple login options alongside existing email/password authentication
 
-### ✅ Major Fix Implemented:
+### ✅ Implementation Completed:
 
-#### **1. Created Robust Avatar Loading System**
-- [x] **New `avatar-utils.js`** - Centralized avatar loading utility
-  - 3-tier fallback system: Custom Avatar → Default SVG → Base64 Inline
-  - Built-in CORS error handling for Firebase Storage issues
-  - Network failure recovery with automatic retries
-  - Base64 embedded fallback avatar ensures something always displays
-  - Loading state management and proper error handling
+#### **1. Firebase Configuration Enhanced**
+- [x] **Updated `firebase-config.js`** with OAuth provider configurations
+  - Added Google OAuth client ID configuration
+  - Added Apple Sign-In service ID and redirect URI
+  - Made OAuth config globally available via `window.oauthConfig`
+  - Backwards compatible with existing configuration system
 
-#### **2. Fixed All Avatar Loading Points**
-- [x] **`membre-detail.js`** - Enhanced individual member avatar loading
-  - Replaced manual avatar loading with robust system
-  - Proper Firebase integration with fallback handling
-  - Loading states and error recovery
+#### **2. Google Sign-In Integration**
+- [x] **Added Google Sign-In SDK** loading after Firebase config initialization
+- [x] **Implemented Google Authentication Provider** with proper scopes
+  - Email and profile scope access
+  - Account selection prompt for better UX
+  - PopUp-based authentication flow
 
-- [x] **`membres.js`** - Fixed table avatar race condition
-  - **Critical Fix**: Replaced direct `img.src` assignments with robust system
-  - Fixed race condition where initial avatars loaded correctly but got replaced
-  - Optimized batch processing (reduced from 20→5 items per batch)
-  - Reduced console logging spam (90% reduction)
+#### **3. Apple Sign-In Integration**  
+- [x] **Implemented Apple OAuth Provider** with Firebase Auth
+  - Email and name scope access
+  - French locale support
+  - PopUp-based authentication flow compatible with web
 
-- [x] **`event-detail.js`** - Enhanced participant/member avatar creation
-  - Updated avatar creation for participant and member cards
-  - Integrated with robust fallback system
+#### **4. UI Components Added**
+- [x] **Social Login Buttons** with professional styling
+  - Google button with official Google colors and icon
+  - Apple button with black styling and Apple icon
+  - Responsive design (stacked on mobile, side-by-side on iPad)
+  - Loading spinners and disabled states
+  - 44px minimum touch targets for iPad compatibility
 
-- [x] **`avatars.js`** - Enhanced avatar management page
-  - Updated avatar display with robust loading system
-  - Better error handling for avatar management interface
+#### **5. User Experience Enhancements**
+- [x] **Seamless Integration** with existing authentication flow
+  - Same approval workflow (admin must approve new social accounts)
+  - Same account lockout protection system
+  - Same French localization and error handling
+  - Same iPad Safari compatibility
 
-#### **3. Updated All HTML Files**
-- [x] Added `avatar-utils.js` script to all relevant pages:
-  - `membre-detail.html`
-  - `membres.html` 
-  - `event-detail.html`
-  - `avatars.html`
-- [x] Proper loading order ensures utilities available when needed
+#### **6. Enhanced User Document Handling**
+- [x] **Social Login User Data** properly stored in Firestore
+  - Login provider tracking (`google` or `apple`)
+  - Provider-specific data (displayName, photoURL, providerId)
+  - Email verification status (social logins considered verified)
+  - Seamless integration with existing user approval system
 
-### 🎯 **Results Achieved:**
+#### **7. Comprehensive Error Handling**
+- [x] **Social-Specific Error Messages** in French
+  - Popup blocked/closed by user
+  - Network connectivity issues
+  - Too many requests handling
+  - Account disabled scenarios
+  - Graceful fallback to email/password login
 
-#### **Before Fix:**
-- ❌ Users sometimes saw "picture missing" images
-- ❌ CORS errors from Firebase Storage blocked avatars
-- ❌ Network failures left broken image placeholders
-- ❌ Race condition in table view replaced good avatars with broken ones
+### 📋 Technical Implementation Details:
 
-#### **After Fix:**
-- ✅ **No more "picture missing" errors** - Users always see some form of avatar
-- ✅ **CORS-resistant** - Firebase Storage issues handled gracefully  
-- ✅ **Network failure resilient** - Works during connectivity problems
-- ✅ **Race condition eliminated** - Table avatars stay consistent
-- ✅ **Consistent user experience** - Same behavior across all pages
+#### **Files Modified:**
+1. **`public/firebase-config.js`** - Added OAuth provider configurations
+2. **`public/login.html`** - Complete social login integration
+   - Google Sign-In SDK integration
+   - Social login UI components
+   - Authentication logic for both providers
+   - Error handling and user feedback
 
-### 🛡️ **Technical Implementation:**
+#### **Key Features Implemented:**
+- **Progressive Enhancement**: Social login adds functionality without breaking existing flow
+- **Security**: Maintains all existing security features (lockout, approval, session management)
+- **User Experience**: Professional UI with proper loading states and error messages
+- **Mobile Compatibility**: iPad-optimized touch targets and responsive design
+- **Accessibility**: Proper ARIA labels, keyboard navigation, screen reader support
 
-#### **Fallback Hierarchy:**
-1. **Primary**: Firebase Storage custom avatar (if available and accessible)
-2. **Secondary**: Default SVG file (`/avatars/default-avatar.svg`)
-3. **Ultimate**: Base64 embedded avatar (always works, cannot fail)
+#### **Authentication Flow:**
+1. User clicks Google/Apple button
+2. Provider popup opens for authentication
+3. User authenticates with social provider
+4. Firebase receives OAuth tokens and creates user session
+5. User document created/updated in Firestore with provider info
+6. Admin approval workflow (same as email/password)
+7. Successful login redirects to dashboard
 
-#### **Error Handling:**
-- CORS policy violations → Graceful fallback
-- Network timeouts → Automatic retry with fallback
-- File not found (404) → Immediate fallback
-- Firebase service errors → Bypass and use defaults
+### 🎯 **Next Steps for Deployment:**
 
-#### **Performance Optimizations:**
-- Caching system prevents repeated failed requests
-- Batch processing with small chunks (5 items) for reliability
-- Reduced logging to prevent console spam
-- Asynchronous loading doesn't block UI
+#### **Firebase Console Setup Required:**
+Before social login works on production, you need to:
 
-### 🧪 **Testing Results:**
-- **Manual Testing**: Confirmed working on https://calybase-2025-lemon.vercel.app/membres
-- **Issue Resolution**: Avatar replacement after initial load completely resolved
-- **Cross-page Compatibility**: All pages now use consistent avatar loading
-- **Error Scenarios**: All failure modes properly handled with fallbacks
+1. **Enable Authentication Providers** in Firebase Console:
+   - Go to Authentication → Sign-in method
+   - Enable Google provider and configure OAuth client
+   - Enable Apple provider and configure service ID
 
-**Status**: ✅ **COMPLETED** - Avatar loading system completely overhauled and working reliably
+2. **Configure OAuth Credentials:**
+   - **Google**: Update client ID in `firebase-config.js` (line 24)
+   - **Apple**: Update service ID in `firebase-config.js` (line 27)
+   - Add authorized domains for your production site
+
+3. **Update OAuth Redirect URIs:**
+   - Add `https://caly-base.vercel.app` to authorized domains
+   - Configure proper redirect URIs for Apple Sign-In
+
+#### **Testing Checklist:**
+- [ ] **Desktop Testing**: Google/Apple login on Chrome, Firefox, Safari
+- [ ] **iPad Testing**: Touch targets, popup behavior, Safari compatibility  
+- [ ] **Mobile Testing**: Responsive button layout, popup handling
+- [ ] **Error Scenarios**: Popup blocked, network issues, account approval flow
+- [ ] **Integration Testing**: Social users can access all app features
+
+### 🔧 **Configuration Templates:**
+
+#### **Google OAuth Setup:**
+- Client ID format: `108529148364-xxxxx.apps.googleusercontent.com`
+- Authorized domains: `calybase.firebaseapp.com`, `caly-base.vercel.app`
+- Authorized redirect URIs: `https://calybase.firebaseapp.com/__/auth/handler`
+
+#### **Apple Sign-In Setup:**  
+- Service ID format: `com.calybase.signin`
+- Redirect URI: `https://calybase.firebaseapp.com/__/auth/handler`
+- Verified domains: `caly-base.vercel.app`
+
+### 📊 **Expected Benefits:**
+- **Improved User Experience**: Faster registration/login process
+- **Higher Conversion**: Reduced friction for new users
+- **Better Security**: OAuth providers handle password security
+- **Enhanced Analytics**: Track registration sources (email vs Google vs Apple)
+
+---
+
+**Implementation Status**: ✅ **COMPLETED** - Ready for Firebase configuration and deployment testing
+
+**Next Action**: Configure OAuth providers in Firebase Console and deploy for testing
+

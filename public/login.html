@@ -242,6 +242,127 @@
             display: none !important;
         }
 
+        /* Social Login Styles */
+        .social-login-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .social-divider {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .social-divider span {
+            background: white;
+            color: #666;
+            font-size: 14px;
+            padding: 0 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .social-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #eee;
+            z-index: 0;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+        }
+
+        .social-button {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            min-height: 48px;
+        }
+
+        .social-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .social-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .social-button.google-button {
+            border-color: #dadce0;
+        }
+
+        .social-button.google-button:hover:not(:disabled) {
+            border-color: #d2d5d9;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+        }
+
+        .social-button.apple-button {
+            background: #000;
+            color: white;
+            border-color: #000;
+        }
+
+        .social-button.apple-button:hover:not(:disabled) {
+            background: #333;
+            border-color: #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .social-icon {
+            flex-shrink: 0;
+        }
+
+        .social-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            right: 16px;
+        }
+
+        .social-button.google-button .social-spinner {
+            border: 2px solid rgba(66, 133, 244, 0.3);
+            border-top: 2px solid #4285F4;
+        }
+
+        /* iPad optimizations for social buttons */
+        @media screen and (min-width: 768px) and (max-width: 1366px) {
+            .social-buttons {
+                flex-direction: row;
+            }
+            
+            .social-button {
+                min-height: 44px;
+                padding: 16px;
+            }
+        }
+
         /* Override any conflicting external styles */
         .modern-login-container {
             display: block !important;
@@ -493,6 +614,32 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     
+    <!-- Google Sign-In SDK (loaded dynamically after config) -->
+    <script>
+        // Load Google Sign-In after OAuth config is available
+        function loadGoogleSignIn() {
+            if (window.firebaseConfigPromise && typeof window.firebaseConfigPromise.then === 'function') {
+                window.firebaseConfigPromise.then(() => {
+                    if (window.oauthConfig && window.oauthConfig.google && window.oauthConfig.google.clientId) {
+                        const script = document.createElement('script');
+                        script.src = 'https://accounts.google.com/gsi/client';
+                        script.async = true;
+                        script.defer = true;
+                        document.head.appendChild(script);
+                        console.log('✅ Google Sign-In SDK loaded');
+                    }
+                }).catch(err => {
+                    console.warn('Google Sign-In loading skipped:', err);
+                });
+            } else {
+                setTimeout(loadGoogleSignIn, 100);
+            }
+        }
+        loadGoogleSignIn();
+    </script>
+    
+    <!-- Apple Sign-In configuration (handled via Firebase Auth) -->
+    
 
     <!-- reCAPTCHA - loaded dynamically after config loads -->
     <script>
@@ -547,6 +694,34 @@
                     <span id="buttonText">Se connecter</span>
                     <div id="buttonSpinner" class="loading-spinner" style="display: none;"></div>
                 </button>
+            </div>
+
+            <!-- Social Login Section -->
+            <div class="social-login-section">
+                <div class="social-divider">
+                    <span>ou continuer avec</span>
+                </div>
+                
+                <div class="social-buttons">
+                    <button type="button" id="googleSignInButton" class="social-button google-button">
+                        <svg class="social-icon" width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Google</span>
+                        <div class="social-spinner" style="display: none;"></div>
+                    </button>
+                    
+                    <button type="button" id="appleSignInButton" class="social-button apple-button">
+                        <svg class="social-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                        </svg>
+                        <span>Apple</span>
+                        <div class="social-spinner" style="display: none;"></div>
+                    </button>
+                </div>
             </div>
 
             <div class="form-links">
@@ -695,6 +870,239 @@
                 setLoading(false);
             }
         };
+
+        // Social login utility functions
+        function setSocialButtonLoading(buttonId, loading) {
+            const button = document.getElementById(buttonId);
+            const spinner = button.querySelector('.social-spinner');
+            
+            if (loading) {
+                button.disabled = true;
+                spinner.style.display = 'block';
+            } else {
+                button.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Google Sign-In functionality
+        async function handleGoogleSignIn() {
+            try {
+                setSocialButtonLoading('googleSignInButton', true);
+                hideStatus();
+                showStatus('<i class="fas fa-cog fa-spin"></i> Connexion avec Google...', 'info');
+
+                // Create Google provider
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('email');
+                provider.addScope('profile');
+                
+                // Set custom parameters
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+
+                console.log('🔍 DEBUG: Starting Google sign-in');
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                console.log('✅ DEBUG: Google sign-in successful for:', user.email);
+
+                // Handle the successful authentication (same as email/password flow)
+                await handleSuccessfulAuth(user, 'google');
+
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                await handleSocialLoginError(error, 'Google');
+            } finally {
+                setSocialButtonLoading('googleSignInButton', false);
+            }
+        }
+
+        // Apple Sign-In functionality  
+        async function handleAppleSignIn() {
+            try {
+                setSocialButtonLoading('appleSignInButton', true);
+                hideStatus();
+                showStatus('<i class="fas fa-cog fa-spin"></i> Connexion avec Apple...', 'info');
+
+                // Create Apple provider
+                const provider = new firebase.auth.OAuthProvider('apple.com');
+                provider.addScope('email');
+                provider.addScope('name');
+                
+                // Set custom parameters
+                provider.setCustomParameters({
+                    locale: 'fr'
+                });
+
+                console.log('🔍 DEBUG: Starting Apple sign-in');
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                console.log('✅ DEBUG: Apple sign-in successful for:', user.email);
+
+                // Handle the successful authentication
+                await handleSuccessfulAuth(user, 'apple');
+
+            } catch (error) {
+                console.error('Apple sign-in error:', error);
+                await handleSocialLoginError(error, 'Apple');
+            } finally {
+                setSocialButtonLoading('appleSignInButton', false);
+            }
+        }
+
+        // Handle successful social authentication
+        async function handleSuccessfulAuth(user, provider) {
+            try {
+                // Reset failed attempts on success
+                if (window.accountLockout) {
+                    await window.accountLockout.resetFailedAttempts(user.email);
+                }
+                
+                // Set session tracking
+                const now = Date.now();
+                const storage = window.SafeStorage || localStorage;
+                console.log('🔍 DEBUG: Setting session data for social login, storage type:', storage === window.SafeStorage ? 'SafeStorage' : 'localStorage');
+                storage.setItem('loginTime', now.toString());
+                storage.setItem('lastActivity', now.toString());
+                storage.setItem('loginProvider', provider);
+                console.log('✅ DEBUG: Session data set, loginTime:', now, 'provider:', provider);
+
+                // Check/create user document and verify status
+                let userStatus = 'active';
+                try {
+                    const firestore = firebase.firestore();
+                    const userDocRef = firestore.collection('users').doc(user.uid);
+                    const userDoc = await userDocRef.get();
+                    
+                    if (!userDoc.exists) {
+                        // Extract name from social provider
+                        let displayName = user.displayName;
+                        if (provider === 'google' && !displayName) {
+                            displayName = user.email.split('@')[0];
+                        }
+                        
+                        const userData = {
+                            email: user.email,
+                            username: displayName || null,
+                            role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                            approved: false,
+                            status: 'pending',
+                            emailVerified: user.emailVerified || true, // Social logins are considered verified
+                            uid: user.uid,
+                            loginProvider: provider,
+                            providerData: {
+                                providerId: user.providerData[0]?.providerId,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL
+                            },
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        
+                        await userDocRef.set(userData);
+                        userStatus = 'pending';
+                    } else {
+                        const userData = userDoc.data();
+                        userStatus = userData.status || 'pending';
+                        
+                        // Update last login and provider info
+                        await userDocRef.update({
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                            loginProvider: provider,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            emailVerified: user.emailVerified || true
+                        });
+                    }
+                } catch (docError) {
+                    console.warn('User document error:', docError);
+                }
+                
+                // Handle user status (same logic as email/password)
+                if (userStatus === 'pending') {
+                    await auth.signOut();
+                    
+                    const providerName = provider === 'google' ? 'Google' : 'Apple';
+                    showStatus(
+                        `<i class="fas fa-clock"></i> <strong>Compte en attente d'approbation</strong><br>
+                        Votre connexion ${providerName} a réussi, mais votre compte doit être approuvé par un administrateur.<br><br>
+                        <div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                            <strong>Email:</strong> ${user.email}<br>
+                            <strong>Fournisseur:</strong> ${providerName}<br>
+                            <strong>Date de demande:</strong> ${new Date().toLocaleDateString('fr-FR')}
+                        </div>
+                        <small>Vous recevrez un email de confirmation une fois votre compte approuvé.</small>`,
+                        'warning',
+                        true
+                    );
+                    return;
+                    
+                } else if (userStatus === 'inactive') {
+                    await auth.signOut();
+                    
+                    showStatus(
+                        '<i class="fas fa-user-slash"></i> <strong>Compte désactivé</strong><br>Votre compte a été désactivé. Veuillez contacter un administrateur.',
+                        'error',
+                        true
+                    );
+                    return;
+                }
+
+                // Success - redirect
+                const providerName = provider === 'google' ? 'Google' : 'Apple';
+                showStatus(`<i class="fas fa-check-circle"></i> <strong>Connexion ${providerName} réussie !</strong><br>Redirection en cours...`, 'success');
+                
+                // Use the same redirect logic as email/password login
+                setTimeout(() => {
+                    console.log('🔍 DEBUG: Social login redirect starting');
+                    window.location.href = '/index.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Social auth handling error:', error);
+                throw error;
+            }
+        }
+
+        // Handle social login errors
+        async function handleSocialLoginError(error, providerName) {
+            console.error(`${providerName} sign-in error:`, error);
+            
+            let errorMessage = '';
+            let errorIcon = 'fas fa-exclamation-circle';
+            
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    errorIcon = 'fas fa-times-circle';
+                    errorMessage = `<strong>Connexion ${providerName} annulée</strong><br>La fenêtre de connexion a été fermée`;
+                    break;
+                case 'auth/popup-blocked':
+                    errorIcon = 'fas fa-ban';
+                    errorMessage = `<strong>Popup bloquée</strong><br>Veuillez autoriser les popups et réessayer`;
+                    break;
+                case 'auth/cancelled-popup-request':
+                    errorIcon = 'fas fa-times';
+                    errorMessage = `<strong>Demande annulée</strong><br>Une autre demande de connexion est en cours`;
+                    break;
+                case 'auth/network-request-failed':
+                    errorIcon = 'fas fa-wifi';
+                    errorMessage = '<strong>Problème de connexion</strong><br>Vérifiez votre connexion internet';
+                    break;
+                case 'auth/too-many-requests':
+                    errorIcon = 'fas fa-hourglass-half';
+                    errorMessage = '<strong>Trop de tentatives</strong><br>Veuillez patienter avant de réessayer';
+                    break;
+                case 'auth/user-disabled':
+                    errorIcon = 'fas fa-ban';
+                    errorMessage = '<strong>Compte désactivé</strong><br>Contactez l\'administrateur';
+                    break;
+                default:
+                    errorMessage = `<strong>Erreur de connexion ${providerName}</strong><br>Veuillez réessayer ou utiliser un autre mode de connexion`;
+            }
+            
+            showStatus(`<i class="${errorIcon}"></i> ${errorMessage}`, 'error');
+        }
 
         // Login form handler
         const loginForm = document.getElementById('loginForm');
@@ -965,6 +1373,21 @@
                 
             } finally {
                 setLoading(false);
+            }
+        });
+
+        // Social login button event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Google Sign-In button
+            const googleButton = document.getElementById('googleSignInButton');
+            if (googleButton) {
+                googleButton.addEventListener('click', handleGoogleSignIn);
+            }
+
+            // Apple Sign-In button
+            const appleButton = document.getElementById('appleSignInButton');
+            if (appleButton) {
+                appleButton.addEventListener('click', handleAppleSignIn);
             }
         });
     </script>

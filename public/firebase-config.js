@@ -19,6 +19,15 @@ async function loadFirebaseConfig() {
                     messagingSenderId: "108529148364",
                     appId: "1:108529148364:web:08289524026f6a91f6bd69"
                 },
+                oauth: {
+                    google: {
+                        clientId: "108529148364-your-google-oauth-client-id.apps.googleusercontent.com"
+                    },
+                    apple: {
+                        clientId: "your.apple.service.id",
+                        redirectUri: "https://calybase.firebaseapp.com/__/auth/handler"
+                    }
+                },
                 recaptcha: {
                     siteKey: "your-recaptcha-site-key"
                 }
@@ -27,6 +36,7 @@ async function loadFirebaseConfig() {
             // Make Firebase config available globally
             window.firebaseConfig = config.firebase;
             window.recaptchaSiteKey = config.recaptcha.siteKey;
+            window.oauthConfig = config.oauth;
             return config.firebase;
         }
         
@@ -60,6 +70,10 @@ async function loadFirebaseConfig() {
         // Make Firebase config available globally
         window.firebaseConfig = config.firebase;
         window.recaptchaSiteKey = config.recaptcha.siteKey;
+        window.oauthConfig = config.oauth || {
+            google: { clientId: "108529148364-your-google-oauth-client-id.apps.googleusercontent.com" },
+            apple: { clientId: "your.apple.service.id", redirectUri: "https://calybase.firebaseapp.com/__/auth/handler" }
+        };
         
         return config.firebase;
     } catch (error) {
