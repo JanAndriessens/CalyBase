@@ -178,7 +178,7 @@
 
 #### **Current Status:**
 - Local repository: `/Users/jan/Documents/GitHub/CalyBase`
-- Vercel project: `vercel.com/h2m/caly-base` (project ID: `prj_lEeGELeI6rlFWYyF1NVMNEcsDSWa`)
+- Vercel project: `vercel.com/h2m/caly-base` (project ID: `prj_Hg8dZODLRIPUT0DAp5LYK624gc3n`)
 - All code changes committed locally and ready to deploy
 
 #### **Next Steps for GitHub Desktop + Vercel Setup:**
@@ -367,4 +367,50 @@ Before social login works on production, you need to:
 **Implementation Status**: ✅ **COMPLETED** - Ready for Firebase configuration and deployment testing
 
 **Next Action**: Configure OAuth providers in Firebase Console and deploy for testing
+
+---
+
+## 🧹 Vercel Project Cleanup - IN PROGRESS
+
+### Issue: July 28, 2025
+**Problem**: Multiple Vercel projects created for the same CalyBase application causing deployment confusion
+
+### ✅ Active Project Identified:
+- **Project ID**: `prj_Hg8dZODLRIPUT0DAp5LYK624gc3n`
+- **Repository**: Connected to `h2m-ai/CalyBase`
+- **Status**: Receiving deployments correctly
+- **Live URL**: https://caly-base.vercel.app/
+
+### 🗑️ Projects to Delete:
+- **`calybase-2025`** - Duplicate/testing project
+- **`calybase-production`** - Unused project
+- **`calybase`** - Legacy project
+
+### 📋 Cleanup Steps:
+
+#### **For You to Complete in Vercel Dashboard:**
+
+1. **Keep the Active Project**:
+   - Project ID: `prj_Hg8dZODLRIPUT0DAp5LYK624gc3n`
+   - Verify it's connected to `h2m-ai/CalyBase`
+   - Confirm it has recent deployment history
+
+2. **Delete Duplicate Projects**:
+   - Go to each duplicate project's Settings
+   - Scroll to "Delete Project" section
+   - Delete: `calybase-2025`, `calybase-production`, `calybase`
+
+3. **Verify Active Project Settings**:
+   - **Git Integration**: Connected to `h2m-ai/CalyBase`
+   - **Branch**: Watching `main` branch
+   - **Build Command**: Default (or custom if needed)
+   - **Framework**: Auto-detected or Static
+
+### 🎯 **Expected Result:**
+- Single Vercel project managing CalyBase
+- Clean deployment pipeline
+- No confusion about which project is active
+- Consistent live site at https://caly-base.vercel.app/
+
+**Status**: ✅ **Documentation Updated** - Ready for project cleanup
 
