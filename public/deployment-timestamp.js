@@ -1,16 +1,16 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit XLSX-ONLY-IMPORT');
-console.log('✅ LATEST DEPLOYMENT: XLSX-only import with French conversion instructions');
-console.log('🎯 IF YOU SEE THIS: Only XLSX files accepted - XLS files get conversion instructions!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit SESSION-TIMEOUT-IMPLEMENTATION');
+console.log('✅ LATEST DEPLOYMENT: Session timeout functionality with configurable warnings');
+console.log('🎯 IF YOU SEE THIS: Session timeouts are now active - check system settings!');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'XLSX-ONLY-IMPORT',
+    commit: 'SESSION-TIMEOUT-IMPLEMENTATION',
     timestamp: new Date().toISOString(),
-    approach: 'XLSX-only import: Block XLS files, show French conversion instructions, optimize for XLSX format',
+    approach: 'Complete session timeout system: activity monitoring, configurable timeouts, warning dialogs, auto-logout',
     expectedLogs: [
-        '🎯 Only XLSX files accepted - XLS files get conversion instructions!',
-        '✅ UTF-8 encoding optimized for XLSX format',
-        '📋 French conversion instructions for XLS users'
+        '🎯 Session timeouts are now active - check system settings!',
+        '✅ Session manager initialized with configurable timeouts',
+        '📋 Warning dialogs appear before automatic logout'
     ]
 };
