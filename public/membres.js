@@ -337,21 +337,96 @@ async function readExcelFile(file) {
                     return;
                 }
 
+                // Create header mapping - map Excel headers to column indices
+                const headers = jsonData[0] || [];
+                console.log('Creating header mapping from:', headers);
+                
+                // Function to find column index by header name (case-insensitive, flexible matching)
+                const findColumnIndex = (headerName) => {
+                    return headers.findIndex(h => 
+                        String(h || '').toLowerCase().trim() === headerName.toLowerCase().trim()
+                    );
+                };
+                
+                // Create mapping of field names to column indices
+                const columnMapping = {
+                    lifrasID: findColumnIndex('LifrasID'),
+                    nrFebras: findColumnIndex('NrFebras'),
+                    nom: findColumnIndex('Nom'),
+                    prenom: findColumnIndex('Prenom'),
+                    adresse: findColumnIndex('Adresse'),
+                    codePostal: findColumnIndex('Code postal'),
+                    localite: findColumnIndex('Localité'),
+                    email1: findColumnIndex('Email'),
+                    telephonePrive: findColumnIndex('Téléphone privé'),
+                    telephoneBureau: findColumnIndex('Téléphone bureau'),
+                    gsm1: findColumnIndex('GSM'),
+                    dateCertificatMedical: findColumnIndex('Date du certificat médical'),
+                    validiteCertificatMedical: findColumnIndex('Validité du certificat médical'),
+                    dateECG: findColumnIndex('Date du ECG'),
+                    validiteECG: findColumnIndex('Validité du ECG'),
+                    ice: findColumnIndex('ICE'),
+                    description: findColumnIndex('Description'),
+                    pays: findColumnIndex('Pays'),
+                    dateNaissance: findColumnIndex('Date de naissance'),
+                    lieuNaissance: findColumnIndex('Lieu de naissance'),
+                    langue: findColumnIndex('Langue'),
+                    nationalite: findColumnIndex('Nationalité'),
+                    newsletter: findColumnIndex('Newsletter'),
+                    typeCertif1: findColumnIndex('Type de certif'),
+                    plongeur: findColumnIndex('Plongeur'),
+                    apneiste: findColumnIndex('Apnéiste'),
+                    gasBlender: findColumnIndex('Gas Blender'),
+                    nitrox: findColumnIndex('Nitrox'),
+                    plongeeSouterraine: findColumnIndex('Plongée Souterraine'),
+                    plongeurAdapte: findColumnIndex('Plongeur Adapté'),
+                    qualificationPPA: findColumnIndex('Qualification PPA'),
+                    qualificationVE: findColumnIndex('Qualification VE'),
+                    techniqueSubaquatique: findColumnIndex('Technique Subaquatique'),
+                    trimix: findColumnIndex('Trimix'),
+                    dateDerniereInscription: findColumnIndex('Date dernière inscription'),
+                    validiteCFPS: findColumnIndex('Validité CFPS'),
+                    adeps: findColumnIndex('ADEPS'),
+                    plongeeEnfantEncadrant: findColumnIndex('Plongée enfant encadrant'),
+                    photographe: findColumnIndex('Photographe'),
+                    archeologue: findColumnIndex('Archéologue'),
+                    medecin: findColumnIndex('Médecin'),
+                    derniereModif: findColumnIndex('Dernière modif'),
+                    licenceFD: findColumnIndex('Licence FD')
+                };
+                
+                console.log('Column mapping created:', columnMapping);
+                
+                // Handle duplicate fields by finding multiple instances
+                const emailIndices = [];
+                const gsmIndices = [];
+                const typeCertifIndices = [];
+                
+                headers.forEach((header, index) => {
+                    const headerStr = String(header || '').toLowerCase().trim();
+                    if (headerStr === 'email') emailIndices.push(index);
+                    if (headerStr === 'gsm') gsmIndices.push(index);
+                    if (headerStr === 'type de certif') typeCertifIndices.push(index);
+                });
+                
+                console.log('Duplicate field indices:', { emailIndices, gsmIndices, typeCertifIndices });
+
                 // Verwerk de data, beginnend vanaf de tweede rij (index 1)
                 const processedData = jsonData.slice(1).map((row, index) => {
                     console.log(`Processing row ${index + 1}:`, row);
                     
-                    if (!row[0]) {
-                        console.log(`Skipping empty row ${index + 1}`);
+                    if (!row || !row[columnMapping.lifrasID]) {
+                        console.log(`Skipping empty row ${index + 1} (no LifrasID)`);
                         return null;
                     }
 
-                    // Converteer en reinig elke cel (preserving French accents)
-                    const cleanRow = row.map((cell, cellIndex) => {
-                        if (cell === undefined || cell === null) {
-                            console.log(`Empty cell at row ${index + 1}, column ${cellIndex}`);
-                            return '';
-                        }
+                    // Function to get cleaned cell value by column index
+                    const getCleanValue = (colIndex) => {
+                        if (colIndex === -1 || !row[colIndex]) return '';
+                        
+                        const cell = row[colIndex];
+                        if (cell === undefined || cell === null) return '';
+                        
                         const str = String(cell);
                         const cleaned = str
                             .replace(/¡/g, 'i')
@@ -362,61 +437,60 @@ async function readExcelFile(file) {
                             .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
                             .replace(/\s+/g, ' ')         // Normalize multiple spaces to single space
                             .trim();
-                        console.log(`Cell ${cellIndex} cleaned: "${str}" -> "${cleaned}"`);
+                        
                         return cleaned;
-                    });
+                    };
 
-                    // Maak het object met de exacte kolomtoewijzing volgens de Excel structuur
+                    // Create object using header-based mapping
                     const processedRow = {
-                        lifrasID: cleanRow[0] || '',           // LifrasID
-                        nrFebras: cleanRow[1] || '',          // Nr.Febras
-                        nom: cleanRow[2] || '',               // Nom
-                        prenom: cleanRow[3] || '',            // Prenom
-                        adresse: cleanRow[4] || '',           // Adresse
-                        codePostal: cleanRow[5] || '',        // Code postal
-                        localite: cleanRow[6] || '',          // Localité
-                        email1: cleanRow[7] || '',            // Email 1
-                        email2: cleanRow[8] || '',            // Email 2
-                        email3: cleanRow[9] || '',            // Email 3
-                        telephonePrive: cleanRow[10] || '',   // Téléphone privé
-                        telephoneBureau: cleanRow[11] || '',  // Téléphone bureau
-                        gsm1: cleanRow[12] || '',             // GSM 1
-                        gsm2: cleanRow[13] || '',             // GSM 2
-                        gsm3: cleanRow[14] || '',             // GSM 3
-                        dateCertificatMedical: cleanRow[15] || '', // Date du certificat médical
-                        validiteCertificatMedical: cleanRow[16] || '', // Validité du certificat médical
-                        dateECG: cleanRow[17] || '',          // Date du E.C.G.
-                        validiteECG: cleanRow[18] || '',      // Validité du E.C.G.
-                        ice: cleanRow[19] || '',              // ICE
-                        description: cleanRow[20] || '',      // Description
-                        pays: cleanRow[21] || '',             // Pays
-                        dateNaissance: cleanRow[22] || '',    // Date de naissance
-                        lieuNaissance: cleanRow[23] || '',    // Lieu de naissance
-                        langue: cleanRow[24] || '',           // Langue
-                        nationalite: cleanRow[25] || '',      // Nationalité
-                        newsletter: cleanRow[26] || '',       // Newsletter
-                        typeCertif1: cleanRow[27] || '',      // Type de certif.1
-                        typeCertif2: cleanRow[28] || '',      // Type de certif.2
-                        plongeur: cleanRow[29] || '',         // Plongeur
-                        apneiste: cleanRow[30] || '',         // Apnéiste
-                        gasBlender: cleanRow[31] || '',       // Gas Blender
-                        nitrox: cleanRow[32] || '',           // Nitrox
-                        plongeeSouterraine: cleanRow[33] || '', // Plongée Souterraine
-                        plongeurAdapte: cleanRow[34] || '',   // Plongeur Adapté
-                        qualificationPPA: cleanRow[35] || '', // Qualification PPA
-                        qualificationVE: cleanRow[36] || '',  // Qualification VE
-                        techniqueSubaquatique: cleanRow[37] || '', // Technique Subaquatique
-                        trimix: cleanRow[38] || '',           // Trimix
-                        dateDerniereInscription: cleanRow[39] || '', // Date dernière inscription
-                        validiteCFPS: cleanRow[40] || '',     // Validité CFPS
-                        adeps: cleanRow[41] || '',            // ADEPS
-                        plongeeEnfantEncadrant: cleanRow[42] || '', // Plongée enfant encadrant
-                        photographe: cleanRow[43] || '',      // Photographe
-                        archeologue: cleanRow[44] || '',      // Archéologue
-                        medecin: cleanRow[45] || '',          // Médecin
-                        derniereModif: cleanRow[46] || '',    // Dernière modif.
-                        licenceFD: cleanRow[47] || '',         // Licence FD
-                        medical: cleanRow[48] || ''            // Medical
+                        lifrasID: getCleanValue(columnMapping.lifrasID),
+                        nrFebras: getCleanValue(columnMapping.nrFebras),
+                        nom: getCleanValue(columnMapping.nom),
+                        prenom: getCleanValue(columnMapping.prenom),
+                        adresse: getCleanValue(columnMapping.adresse),
+                        codePostal: getCleanValue(columnMapping.codePostal),
+                        localite: getCleanValue(columnMapping.localite),
+                        email1: getCleanValue(emailIndices[0] || -1),
+                        email2: getCleanValue(emailIndices[1] || -1),
+                        email3: getCleanValue(emailIndices[2] || -1),
+                        telephonePrive: getCleanValue(columnMapping.telephonePrive),
+                        telephoneBureau: getCleanValue(columnMapping.telephoneBureau),
+                        gsm1: getCleanValue(gsmIndices[0] || -1),
+                        gsm2: getCleanValue(gsmIndices[1] || -1),
+                        gsm3: getCleanValue(gsmIndices[2] || -1),
+                        dateCertificatMedical: getCleanValue(columnMapping.dateCertificatMedical),
+                        validiteCertificatMedical: getCleanValue(columnMapping.validiteCertificatMedical),
+                        dateECG: getCleanValue(columnMapping.dateECG),
+                        validiteECG: getCleanValue(columnMapping.validiteECG),
+                        ice: getCleanValue(columnMapping.ice),
+                        description: getCleanValue(columnMapping.description),
+                        pays: getCleanValue(columnMapping.pays),
+                        dateNaissance: getCleanValue(columnMapping.dateNaissance),
+                        lieuNaissance: getCleanValue(columnMapping.lieuNaissance),
+                        langue: getCleanValue(columnMapping.langue),
+                        nationalite: getCleanValue(columnMapping.nationalite),
+                        newsletter: getCleanValue(columnMapping.newsletter),
+                        typeCertif1: getCleanValue(typeCertifIndices[0] || -1),
+                        typeCertif2: getCleanValue(typeCertifIndices[1] || -1),
+                        plongeur: getCleanValue(columnMapping.plongeur),
+                        apneiste: getCleanValue(columnMapping.apneiste),
+                        gasBlender: getCleanValue(columnMapping.gasBlender),
+                        nitrox: getCleanValue(columnMapping.nitrox),
+                        plongeeSouterraine: getCleanValue(columnMapping.plongeeSouterraine),
+                        plongeurAdapte: getCleanValue(columnMapping.plongeurAdapte),
+                        qualificationPPA: getCleanValue(columnMapping.qualificationPPA),
+                        qualificationVE: getCleanValue(columnMapping.qualificationVE),
+                        techniqueSubaquatique: getCleanValue(columnMapping.techniqueSubaquatique),
+                        trimix: getCleanValue(columnMapping.trimix),
+                        dateDerniereInscription: getCleanValue(columnMapping.dateDerniereInscription),
+                        validiteCFPS: getCleanValue(columnMapping.validiteCFPS),
+                        adeps: getCleanValue(columnMapping.adeps),
+                        plongeeEnfantEncadrant: getCleanValue(columnMapping.plongeeEnfantEncadrant),
+                        photographe: getCleanValue(columnMapping.photographe),
+                        archeologue: getCleanValue(columnMapping.archeologue),
+                        medecin: getCleanValue(columnMapping.medecin),
+                        derniereModif: getCleanValue(columnMapping.derniereModif),
+                        licenceFD: getCleanValue(columnMapping.licenceFD)
                     };
 
                     console.log('Processed row:', processedRow);
