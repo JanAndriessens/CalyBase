@@ -167,6 +167,16 @@ class MemberPermissions {
     getDefaultConfig() {
         return {
             permissions: {
+                superAdmin: {
+                    canImportMembers: true,
+                    canDeleteMembers: true,
+                    canModifyMembers: true,
+                    canViewMembers: true,
+                    canManageMemberAvatars: true,
+                    canViewMemberDetails: true,
+                    canCreateMembers: true,
+                    canBulkDeleteMembers: true
+                },
                 admin: {
                     canImportMembers: true,
                     canDeleteMembers: true,
