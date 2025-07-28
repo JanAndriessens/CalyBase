@@ -619,10 +619,13 @@ async function loadMembers() {
             });
         });
         
-        // ⚡ Load avatars in background (non-blocking)
-        loadMemberAvatarsAsync(members).catch(error => 
-            console.warn('Background avatar loading failed:', error)
-        );
+        // ⚡ Load avatars immediately (blocking to ensure they show on initial load)
+        try {
+            await loadMemberAvatarsAsync(members);
+            console.log('✅ Initial avatar loading completed');
+        } catch (error) {
+            console.warn('⚠️ Initial avatar loading failed:', error);
+        }
         
         // ⚡ Apply view and edit permissions in background (non-blocking)
         applyMemberActionPermissions().catch(error => 
@@ -740,18 +743,25 @@ async function loadMemberAvatarsAsync(members) {
             return;
         }
 
-        // ⚡ OPTIMIZATION: Single batch query instead of individual queries
+        // ⚡ OPTIMIZATION: Handle Firestore 'in' query limit by batching
         console.log('📦 Batch loading avatars for', lifrasIDs.length, 'members...');
-        const avatarsSnapshot = await window.db.collection('avatars')
-            .where('lifrasID', 'in', lifrasIDs.slice(0, 10)) // Firestore limit: 10 items in 'in' query
-            .get();
-
-        // Create a map for fast lookups
         const avatarMap = new Map();
-        avatarsSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            avatarMap.set(data.lifrasID, data.photoURL);
-        });
+        
+        // Process in batches of 10 (Firestore 'in' query limit)
+        const batchSize = 10;
+        for (let i = 0; i < lifrasIDs.length; i += batchSize) {
+            const batch = lifrasIDs.slice(i, i + batchSize);
+            console.log(`📦 Loading avatar batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(lifrasIDs.length/batchSize)} (${batch.length} items)`);
+            
+            const avatarsSnapshot = await window.db.collection('avatars')
+                .where('lifrasID', 'in', batch)
+                .get();
+                
+            avatarsSnapshot.docs.forEach(doc => {
+                const data = doc.data();
+                avatarMap.set(data.lifrasID, data.photoURL);
+            });
+        }
 
         // ⚡ Update DOM in batches to avoid blocking
         let processed = 0;
