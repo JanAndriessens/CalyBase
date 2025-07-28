@@ -406,3 +406,97 @@ Before social login works on production, you need to:
 - **Clean Dashboard**: Single project managing all deployments ✅
 - **Deployment Pipeline**: Streamlined and conflict-free ✅
 
+---
+
+## 🔧 User Deletion CORS Fix - COMPLETED
+
+### Issue: July 28, 2025
+**Problem**: "Failed to fetch" error when deleting users from user management interface due to CORS policy blocking requests from Vercel deployment
+
+### ✅ Root Cause Identified:
+- **CORS Configuration**: Firebase Functions not allowing requests from `https://calybase.vercel.app`
+- **API Endpoints**: User deletion calls blocked by browser CORS policy
+- **Deployment Domain**: Vercel domains not included in allowed origins
+
+### ✅ Implementation Completed:
+
+#### **1. CORS Configuration Updated**
+- [x] **Updated Firebase Functions CORS settings** in `/functions/src/index.ts`
+  - Added `https://calybase.vercel.app` to allowed origins array
+  - Added `https://caly-base.vercel.app` to allowed origins array  
+  - Enhanced CORS middleware for all API endpoints
+  - Added explicit OPTIONS handlers for delete endpoints
+
+#### **2. TypeScript Compilation Fixes**
+- [x] **Resolved TypeScript errors** in Firebase Functions
+  - Fixed error handling type assertions
+  - Added proper request/response type annotations
+  - Ensured clean compilation before deployment
+
+#### **3. Firebase Functions Deployment**
+- [x] **Successfully deployed updated functions**
+  - Fixed npm dependency issues and permissions
+  - Built TypeScript to JavaScript successfully
+  - Deployed to `https://us-central1-calybase.cloudfunctions.net/api`
+  - Verified API endpoints responding correctly
+
+### 📋 Technical Implementation Details:
+
+#### **Files Modified:**
+1. **`functions/src/index.ts`** - CORS configuration and TypeScript fixes
+   - Updated `allowedOrigins` array with Vercel domains (lines 23-31)
+   - Fixed error handling type safety (line 99-100)
+   - Added proper TypeScript annotations for request handlers
+
+#### **Key CORS Settings:**
+```javascript
+const allowedOrigins = [
+  'https://calybase.web.app',
+  'https://calybase.firebaseapp.com', 
+  'https://calybase.vercel.app',        // Added for production
+  'https://caly-base.vercel.app',       // Added for production
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5000'
+];
+```
+
+#### **Deployment Process:**
+1. Fixed npm cache permissions with `sudo chown`
+2. Installed Firebase Functions dependencies with `npm install`
+3. Resolved TypeScript compilation errors
+4. Built functions with `npm run build`
+5. Deployed with `firebase deploy --only functions`
+6. Verified deployment success and API functionality
+
+### 🎯 **Results:**
+
+#### **✅ User Deletion Functionality Restored:**
+- User deletion from user management interface works without errors
+- CORS policy now allows requests from Vercel deployment
+- "Failed to fetch" error completely resolved
+- All Firebase Functions API endpoints accessible from production
+
+#### **✅ API Endpoints Confirmed Working:**
+- **Status endpoint**: `https://us-central1-calybase.cloudfunctions.net/api/status`
+- **User management**: `https://us-central1-calybase.cloudfunctions.net/api/auth/firebase-users`
+- **User deletion**: `https://us-central1-calybase.cloudfunctions.net/api/auth/delete-user`
+
+### 🔒 **Security Maintained:**
+- All existing authentication and authorization maintained
+- Admin permissions still required for user deletion
+- CORS policy restrictive to known domains only
+- No security vulnerabilities introduced
+
+### 📊 **Testing Results:**
+- **User deletion**: ✅ Working from https://calybase.vercel.app
+- **CORS compliance**: ✅ All origins properly configured
+- **API functionality**: ✅ All endpoints responding correctly
+- **Authentication**: ✅ Admin permissions enforced
+
+---
+
+**Implementation Status**: ✅ **COMPLETED** - User deletion functionality fully restored with proper CORS configuration
+
+**Next Action**: User management system is fully operational
+

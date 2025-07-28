@@ -23,6 +23,8 @@ const app = express();
 const allowedOrigins = [
   'https://calybase.web.app',
   'https://calybase.firebaseapp.com',
+  'https://calybase.vercel.app',
+  'https://caly-base.vercel.app',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5000'
@@ -94,8 +96,8 @@ async function requireAuth(req: any, res: any, next: any) {
         console.error('Auth middleware error:', error);
         res.status(401).json({ 
             error: 'Invalid authorization token', 
-            details: error && error.message ? error.message : String(error),
-            stack: error && error.stack ? error.stack : undefined
+            details: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
         });
     }
 }
@@ -180,7 +182,7 @@ app.post('/auth/delete-user', cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}), requireAuth, async (req, res) => {
+}), requireAuth, async (req: any, res: any) => {
     try {
         console.log('🔍 Functions: Delete user endpoint called (via POST)');
         console.log('📝 Functions: Request body:', req.body);

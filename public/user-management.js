@@ -529,12 +529,14 @@ function updateFilteredUsersList() {
             <td>${user.createdAt ? user.createdAt.toLocaleDateString('fr-FR') : '-'}</td>
             <td>${user.lastLogin ? user.lastLogin.toLocaleDateString('fr-FR') : '-'}</td>
             <td>
-                <button class="btn btn-edit" data-action="edit" data-uid="${user.uid}">
-                    <i class="fas fa-edit"></i> <span class="btn-label">Modifier</span>
-                </button>
-                ${user.role !== 'admin' ? `<button class="btn btn-reject" data-action="delete" data-uid="${user.uid}" data-email="${user.email}">
-                    <i class="fas fa-trash"></i> <span class="btn-label">Supprimer</span>
-                </button>` : ''}
+                <div class="action-buttons">
+                    <button class="btn btn-edit btn-icon" data-action="edit" data-uid="${user.uid}" title="Modifier">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    ${user.role !== 'admin' ? `<button class="btn btn-reject btn-icon" data-action="delete" data-uid="${user.uid}" data-email="${user.email}" title="Supprimer">
+                        <i class="fas fa-trash"></i>
+                    </button>` : ''}
+                </div>
             </td>
         `;
         tbody.appendChild(row);
