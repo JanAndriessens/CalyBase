@@ -1,16 +1,15 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit SESSION-TIMEOUT-IMPLEMENTATION');
-console.log('✅ LATEST DEPLOYMENT: Session timeout functionality with configurable warnings');
-console.log('🎯 IF YOU SEE THIS: Session timeouts are now active - check system settings!');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit DEBUG-WINDOW-REMOVAL');
+console.log('✅ LATEST DEPLOYMENT: Remove iPad debug window from login page');
+console.log('🎯 IF YOU SEE THIS: Debug overlay has been removed from login page');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'SESSION-TIMEOUT-IMPLEMENTATION',
+    commit: 'DEBUG-WINDOW-REMOVAL',
     timestamp: new Date().toISOString(),
-    approach: 'Complete session timeout system: activity monitoring, configurable timeouts, warning dialogs, auto-logout',
+    approach: 'Remove debug overlay window and CSS styles from login.html to clean up iPad interface',
     expectedLogs: [
-        '🎯 Session timeouts are now active - check system settings!',
-        '✅ Session manager initialized with configurable timeouts',
-        '📋 Warning dialogs appear before automatic logout'
+        '🎯 Debug overlay has been removed from login page',
+        '✅ Clean login interface restored'
     ]
 };
