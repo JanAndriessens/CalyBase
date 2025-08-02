@@ -8,6 +8,7 @@
  */
 
 import {onRequest} from "firebase-functions/v2/https";
+import {beforeUserCreated, beforeUserSignedIn} from "firebase-functions/v2/identity";
 import express from "express";
 import cors from "cors";
 import admin from "firebase-admin";
@@ -262,3 +263,115 @@ export const api = onRequest({
     ingressSettings: "ALLOW_ALL",
     invoker: "public"
 }, app);
+
+// ===========================================
+// FIREBASE AUTH TRIGGERS
+// ===========================================
+
+// Automatically create Firestore document when user is created
+export const createUserDocument = beforeUserCreated(async (event) => {
+    const user = event.data;
+    const firestore = admin.firestore();
+    
+    console.log(`📝 Creating Firestore document for new user: ${user.email} (UID: ${user.uid})`);
+    
+    try {
+        // Check if this is an admin email
+        const adminEmails = ['jan@andriessens.be', 'jan.andriessens@gmail.com', 'james.hughes@skynet.be'];
+        const isAdmin = adminEmails.includes(user.email || '');
+        
+        // Create user document in Firestore
+        const userData = {
+            email: user.email,
+            username: user.displayName || null,
+            role: isAdmin ? 'admin' : 'user',
+            status: isAdmin ? 'active' : 'pending',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            uid: user.uid,
+            emailVerified: user.emailVerified || false,
+            approved: isAdmin,
+            lastLogin: null,
+            approvalDate: isAdmin ? admin.firestore.FieldValue.serverTimestamp() : null,
+            approvedBy: isAdmin ? 'auto-admin' : null,
+            source: 'firebase-auth-trigger'
+        };
+        
+        await firestore.collection('users').doc(user.uid).set(userData);
+        
+        console.log(`✅ Firestore document created successfully for ${user.email}`);
+        console.log(`   📧 Email: ${userData.email}`);
+        console.log(`   👤 Role: ${userData.role}`);
+        console.log(`   📊 Status: ${userData.status}`);
+        console.log(`   ✅ Approved: ${userData.approved}`);
+        
+        // Set custom claims for admin users
+        if (isAdmin) {
+            await admin.auth().setCustomUserClaims(user.uid, { role: 'admin' });
+            console.log(`👑 Admin custom claims set for ${user.email}`);
+        }
+        
+    } catch (error) {
+        console.error(`❌ Failed to create Firestore document for ${user.email}:`, error);
+        // Don't throw error to avoid blocking user creation
+        // The user will still be created in Firebase Auth, just without Firestore doc
+        // The sync script can fix this later
+    }
+});
+
+// Update last login time when user signs in
+export const updateLastLogin = beforeUserSignedIn(async (event) => {
+    const user = event.data;
+    const firestore = admin.firestore();
+    
+    console.log(`🔄 Updating last login for user: ${user.email} (UID: ${user.uid})`);
+    
+    try {
+        const userDocRef = firestore.collection('users').doc(user.uid);
+        const userDoc = await userDocRef.get();
+        
+        if (userDoc.exists) {
+            // Update last login time
+            await userDocRef.update({
+                lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(`✅ Last login updated for ${user.email}`);
+        } else {
+            // Create missing document (backup safety net)
+            console.log(`⚠️ Missing Firestore document for ${user.email}, creating now...`);
+            
+            const adminEmails = ['jan@andriessens.be', 'jan.andriessens@gmail.com', 'james.hughes@skynet.be'];
+            const isAdmin = adminEmails.includes(user.email || '');
+            
+            const userData = {
+                email: user.email,
+                username: user.displayName || null,
+                role: isAdmin ? 'admin' : 'user',
+                status: isAdmin ? 'active' : 'pending',
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                uid: user.uid,
+                emailVerified: user.emailVerified || false,
+                approved: isAdmin,
+                lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+                approvalDate: isAdmin ? admin.firestore.FieldValue.serverTimestamp() : null,
+                approvedBy: isAdmin ? 'auto-admin-signin' : null,
+                source: 'firebase-signin-trigger'
+            };
+            
+            await userDocRef.set(userData);
+            console.log(`✅ Missing Firestore document created for ${user.email} during signin`);
+            
+            // Set custom claims for admin users
+            if (isAdmin) {
+                await admin.auth().setCustomUserClaims(user.uid, { role: 'admin' });
+                console.log(`👑 Admin custom claims set for ${user.email} during signin`);
+            }
+        }
+        
+    } catch (error) {
+        console.error(`❌ Failed to update last login for ${user.email}:`, error);
+        // Don't throw error to avoid blocking sign-in
+    }
+});
