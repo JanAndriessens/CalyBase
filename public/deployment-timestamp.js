@@ -1,15 +1,15 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit DEBUG-WINDOW-REMOVAL');
-console.log('✅ LATEST DEPLOYMENT: Remove iPad debug window from login page');
-console.log('🎯 IF YOU SEE THIS: Debug overlay has been removed from login page');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit IPAD-EVENT-DETAIL-LAYOUT-FIX');
+console.log('✅ LATEST DEPLOYMENT: Fix iPad event detail page layout - side-by-side member lists');
+console.log('🎯 IF YOU SEE THIS: Event detail page now shows member lists side-by-side on iPad');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'DEBUG-WINDOW-REMOVAL',
+    commit: 'IPAD-EVENT-DETAIL-LAYOUT-FIX',
     timestamp: new Date().toISOString(),
-    approach: 'Remove debug overlay window and CSS styles from login.html to clean up iPad interface',
+    approach: 'Fix responsive CSS to show side-by-side layout on iPad instead of stacked layout',
     expectedLogs: [
-        '🎯 Debug overlay has been removed from login page',
-        '✅ Clean login interface restored'
+        '🎯 Event detail page now shows member lists side-by-side on iPad',
+        '✅ iPad event detail layout optimized for touch interaction'
     ]
 };
