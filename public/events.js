@@ -223,11 +223,92 @@ function createEventElement(eventId, event) {
     clone.querySelector('.event-date').textContent = formattedDate;
     clone.querySelector('.event-description').textContent = event.description || 'Pas de description';
     
-    // Configurer les boutons
+    // Make entire event card clickable for better UX
+    eventCard.style.cursor = 'pointer';
+    eventCard.style.userSelect = 'none';
+    eventCard.style.webkitUserSelect = 'none';
+    eventCard.style.webkitTouchCallout = 'none';
+    
+    const navigateToEvent = (e) => {
+        // Only navigate if not clicking on action buttons
+        if (!e.target.closest('.event-actions')) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Navigating to event detail from card:', eventId);
+            window.location.href = `event-detail.html?id=${eventId}`;
+        }
+    };
+    
+    // Add touch-friendly event handling to entire card
+    eventCard.addEventListener('click', navigateToEvent, { passive: false });
+    eventCard.addEventListener('touchend', navigateToEvent, { passive: false });
+    
+    // Add visual feedback for card touch
+    eventCard.addEventListener('touchstart', (e) => {
+        if (!e.target.closest('.event-actions')) {
+            eventCard.style.transform = 'scale(0.98)';
+            eventCard.style.opacity = '0.9';
+        }
+    }, { passive: true });
+    
+    eventCard.addEventListener('touchcancel', (e) => {
+        eventCard.style.transform = '';
+        eventCard.style.opacity = '';
+    }, { passive: true });
+    
+    eventCard.addEventListener('touchend', (e) => {
+        setTimeout(() => {
+            eventCard.style.transform = '';
+            eventCard.style.opacity = '';
+        }, 150);
+    }, { passive: true });
+    
+    // Configurer les boutons avec support touch/click amélioré
     const editButton = clone.querySelector('.edit-button');
     if (editButton) {
         editButton.innerHTML = '<i class="fas fa-edit"></i>';
-        editButton.onclick = () => window.location.href = `event-detail.html?id=${eventId}`;
+        
+        // Edit button as backup navigation method
+        const editButtonNavigate = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Navigating to event detail from edit button:', eventId);
+            window.location.href = `event-detail.html?id=${eventId}`;
+        };
+        
+        // Remove any existing onclick to avoid conflicts
+        editButton.onclick = null;
+        
+        // Add multiple event listeners for maximum compatibility
+        editButton.addEventListener('click', editButtonNavigate, { passive: false });
+        editButton.addEventListener('touchend', editButtonNavigate, { passive: false });
+        
+        // Add visual feedback for button touch
+        editButton.addEventListener('touchstart', (e) => {
+            e.stopPropagation(); // Prevent card touch feedback
+            editButton.style.transform = 'scale(0.95)';
+            editButton.style.opacity = '0.7';
+        }, { passive: true });
+        
+        editButton.addEventListener('touchcancel', (e) => {
+            editButton.style.transform = '';
+            editButton.style.opacity = '';
+        }, { passive: true });
+        
+        editButton.addEventListener('touchend', (e) => {
+            setTimeout(() => {
+                editButton.style.transform = '';
+                editButton.style.opacity = '';
+            }, 100);
+        }, { passive: true });
+        
+        // Ensure button is touch-friendly
+        editButton.style.minHeight = '44px';
+        editButton.style.minWidth = '44px';
+        editButton.style.cursor = 'pointer';
+        editButton.style.userSelect = 'none';
+        editButton.style.webkitUserSelect = 'none';
+        editButton.style.webkitTouchCallout = 'none';
     }
     
     return clone;

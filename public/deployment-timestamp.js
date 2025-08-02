@@ -1,15 +1,15 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit IPAD-EVENT-DETAIL-LAYOUT-FIX');
-console.log('✅ LATEST DEPLOYMENT: Fix iPad event detail page layout - side-by-side member lists');
-console.log('🎯 IF YOU SEE THIS: Event detail page now shows member lists side-by-side on iPad');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit IPAD-EVENTS-NAVIGATION-FIX');
+console.log('✅ LATEST DEPLOYMENT: Fix iPad event navigation - touch-friendly event card clicks');
+console.log('🎯 IF YOU SEE THIS: Events page now properly redirects to event details on iPad');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'IPAD-EVENT-DETAIL-LAYOUT-FIX',
+    commit: 'IPAD-EVENTS-NAVIGATION-FIX',
     timestamp: new Date().toISOString(),
-    approach: 'Fix responsive CSS to show side-by-side layout on iPad instead of stacked layout',
+    approach: 'Replace onclick with addEventListener for iPad touch compatibility, make entire cards clickable',
     expectedLogs: [
-        '🎯 Event detail page now shows member lists side-by-side on iPad',
-        '✅ iPad event detail layout optimized for touch interaction'
+        '🎯 Events page now properly redirects to event details on iPad',
+        '✅ Touch-friendly event navigation with visual feedback'
     ]
 };
