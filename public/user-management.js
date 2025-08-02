@@ -87,7 +87,7 @@ async function checkAdminPermissions() {
         
         // Method 2: Hardcoded admin emails (backup)
         if (!isAdmin) {
-            const adminEmails = window.CONSTANTS?.SECURITY?.ADMIN_EMAILS || ['jan@andriessens.be', 'jan.andriessens@gmail.com'];
+            const adminEmails = window.CONSTANTS?.SECURITY?.ADMIN_EMAILS || ['jan@andriessens.be', 'jan.andriessens@gmail.com', 'james.hughes@skynet.be'];
             const trimmedEmail = user.email?.trim().toLowerCase();
             const normalizedAdminEmails = adminEmails.map(e => e.trim().toLowerCase());
             
@@ -730,7 +730,7 @@ window.debugCreateUsers = async function() {
         if (!userDoc.exists) {
             const userData = {
                 email: currentUser.email,
-                role: ['jan@andriessens.be', 'jan.andriessens@gmail.com'].includes(currentUser.email) ? 'admin' : 'user',
+                role: ['jan@andriessens.be', 'jan.andriessens@gmail.com', 'james.hughes@skynet.be'].includes(currentUser.email) ? 'admin' : 'user',
                 status: 'active',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 emailVerified: currentUser.emailVerified,
@@ -745,6 +745,59 @@ window.debugCreateUsers = async function() {
         }
     } catch (error) {
         console.error('❌ Error creating user documents:', error);
+    }
+};
+
+// Function to specifically fix James Hughes account
+window.fixJamesHughesAccount = async function() {
+    try {
+        console.log('🔧 FIXING: James Hughes account (mURyItwdB4VPe8gDOjd5dfIrYV33)...');
+        
+        const jamesUID = 'mURyItwdB4VPe8gDOjd5dfIrYV33';
+        const jamesEmail = 'james.hughes@skynet.be';
+        
+        const userDocRef = window.db.collection('users').doc(jamesUID);
+        const userDoc = await userDocRef.get();
+        
+        if (userDoc.exists) {
+            console.log('📋 Existing document found, updating role to admin...');
+            await userDocRef.update({
+                role: 'admin',
+                status: 'active',
+                approved: true,
+                approvalDate: firebase.firestore.FieldValue.serverTimestamp(),
+                approvedBy: 'manual-fix',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('✅ James Hughes updated to admin successfully!');
+        } else {
+            console.log('❌ Creating missing Firestore document for James Hughes...');
+            const userData = {
+                email: jamesEmail,
+                username: null,
+                role: 'admin',
+                status: 'active',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                uid: jamesUID,
+                emailVerified: false,
+                approved: true,
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                approvalDate: firebase.firestore.FieldValue.serverTimestamp(),
+                approvedBy: 'manual-fix'
+            };
+            
+            await userDocRef.set(userData);
+            console.log('✅ James Hughes Firestore document created as admin successfully!');
+        }
+        
+        // Reload the user management data
+        await loadAllData();
+        console.log('✅ User management data reloaded');
+        
+    } catch (error) {
+        console.error('❌ Error fixing James Hughes account:', error);
+        alert('Error fixing James Hughes account: ' + error.message);
     }
 };
 

@@ -42,7 +42,7 @@ async function syncMissingUsers() {
                 console.log(`   ❌ Missing Firestore document - creating now...`);
                 
                 // Check if this is an admin email
-                const adminEmails = ['jan@andriessens.be', 'jan.andriessens@gmail.com'];
+                const adminEmails = ['jan@andriessens.be', 'jan.andriessens@gmail.com', 'james.hughes@skynet.be'];
                 const isAdmin = adminEmails.includes(userRecord.email);
                 
                 const userData = {

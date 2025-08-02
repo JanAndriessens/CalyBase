@@ -89,7 +89,7 @@
         COOKIE_MAX_AGE: 24 * 60 * 60 * 1000, // 24 hours
         
         // Admin emails (to be moved to database eventually)
-        ADMIN_EMAILS: ['jan@andriessens.be', 'jan.andriessens@gmail.com']
+        ADMIN_EMAILS: ['jan@andriessens.be', 'jan.andriessens@gmail.com', 'james.hughes@skynet.be']
     };
 
     // Validation constants
