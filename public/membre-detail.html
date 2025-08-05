@@ -30,6 +30,7 @@
         </header>
 
         <div class="member-details">
+            <!-- Header avec avatar et nom -->
             <div class="member-header">
                 <div class="avatar-container">
                     <img id="memberAvatar" src="/avatars/default-avatar.svg" alt="Avatar du membre" class="member-avatar">
@@ -43,237 +44,101 @@
                         </button>
                     </div>
                 </div>
-                <h2 id="memberTitle">Chargement...</h2>
+                <div class="member-title">
+                    <h2 id="memberTitle">Chargement...</h2>
+                </div>
             </div>
 
-            <div class="details-grid">
-                <!-- Informations de base -->
-                <div class="details-section">
-                    <h3>Informations de base</h3>
-                    <div class="details-content">
-                        <div class="detail-item">
-                            <label>Lifras ID:</label>
-                            <span id="lifrasID">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Nom:</label>
-                            <span id="nom">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Prénom:</label>
-                            <span id="prenom">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Date de naissance:</label>
-                            <span id="dateNaissance">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Nationalité:</label>
-                            <span id="nationalite">-</span>
-                        </div>
+            <!-- Cartes d'informations simplifiées -->
+            <div class="info-cards">
+                <!-- Carte Informations Personnelles -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <i class="fas fa-user"></i>
+                        <h3>Informations Personnelles</h3>
                     </div>
-                </div>
-
-                <!-- Coordonnées -->
-                <div class="details-section">
-                    <h3>Coordonnées</h3>
-                    <div class="details-content">
-                        <div class="detail-item">
-                            <label>Adresse:</label>
-                            <span id="adresse">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Code postal:</label>
-                            <span id="codePostal">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Localité:</label>
-                            <span id="localite">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Pays:</label>
-                            <span id="pays">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Email 1:</label>
-                            <span id="email1">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Email 2:</label>
-                            <span id="email2">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Email 3:</label>
-                            <span id="email3">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Téléphones -->
-                <div class="details-section">
-                    <h3>Téléphones</h3>
-                    <div class="details-content">
-                        <div class="detail-item">
-                            <label>Téléphone privé:</label>
-                            <span id="telephonePrive">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Téléphone bureau:</label>
-                            <span id="telephoneBureau">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>GSM 1:</label>
-                            <span id="gsm1">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>GSM 2:</label>
-                            <span id="gsm2">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>GSM 3:</label>
-                            <span id="gsm3">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>ICE:</label>
-                            <span id="ice">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Certifications -->
-                <div class="details-section">
-                    <h3>Certifications</h3>
-                    <div class="details-content">
-                        <div class="detail-item">
-                            <label>Medical:</label>
-                            <div class="editable-field">
-                                <span id="medical">-</span>
-                                <input type="text" id="medicalInput" style="display: none;">
-                                <button class="edit-button" data-field="medical">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="save-button" data-field="medical" style="display: none;">
-                                    <i class="fas fa-save"></i>
-                                </button>
+                    <div class="card-content">
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Lifras ID</label>
+                                <span id="lifrasID">-</span>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <label>Date certificat médical:</label>
-                            <span id="dateCertificatMedical">-</span>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Nom</label>
+                                <span id="nom">-</span>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>Validité certificat médical:</label>
-                            <span id="validiteCertificatMedical">-</span>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-user-tag"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Prénom</label>
+                                <span id="prenom">-</span>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>Date ECG:</label>
-                            <span id="dateECG">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Validité ECG:</label>
-                            <span id="validiteECG">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Type certif 1:</label>
-                            <span id="typeCertif1">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Type certif 2:</label>
-                            <span id="typeCertif2">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Qualifications -->
-                <div class="details-section">
-                    <h3>Qualifications</h3>
-                    <div class="details-content">
-                        <div class="detail-item">
-                            <label>Plongeur:</label>
-                            <span id="plongeur">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Apnéiste:</label>
-                            <span id="apneiste">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Gas Blender:</label>
-                            <span id="gasBlender">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Nitrox:</label>
-                            <span id="nitrox">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Plongée souterraine:</label>
-                            <span id="plongeeSouterraine">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Plongeur adapté:</label>
-                            <span id="plongeurAdapte">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Qualification PPA:</label>
-                            <span id="qualificationPPA">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Qualification VE:</label>
-                            <span id="qualificationVE">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Technique subaquatique:</label>
-                            <span id="techniqueSubaquatique">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Trimix:</label>
-                            <span id="trimix">-</span>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Licence FD</label>
+                                <span id="licenceFD">-</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Autres informations -->
-                <div class="details-section">
-                    <h3>Autres informations</h3>
-                    <div class="details-content">
-                        <div class="detail-item">
-                            <label>Date dernière inscription:</label>
-                            <span id="dateDerniereInscription">-</span>
+                <!-- Carte Informations Médicales -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <i class="fas fa-heartbeat"></i>
+                        <h3>Informations Médicales</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Statut Médical</label>
+                                <span id="medical" class="medical-status">-</span>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>Validité CFPS:</label>
-                            <span id="validiteCFPS">-</span>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-calendar-plus"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Date Certificat Médical</label>
+                                <span id="dateCertificatMedical">-</span>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>ADEPS:</label>
-                            <span id="adeps">-</span>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Validité Certificat Médical</label>
+                                <span id="validiteCertificatMedical">-</span>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <label>Plongée enfant encadrant:</label>
-                            <span id="plongeeEnfantEncadrant">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Photographe:</label>
-                            <span id="photographe">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Archéologue:</label>
-                            <span id="archeologue">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Médecin:</label>
-                            <span id="medecin">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Newsletter:</label>
-                            <span id="newsletter">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Licence FD:</label>
-                            <span id="licenceFD">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Description:</label>
-                            <span id="description">-</span>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div class="info-details">
+                                <label>Contact Urgence (ICE)</label>
+                                <span id="ice">-</span>
+                            </div>
                         </div>
                     </div>
                 </div>

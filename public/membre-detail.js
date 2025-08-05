@@ -519,7 +519,22 @@ function displayMembreDetails(membre) {
         const medicalStatus = window.calculateMedicalStatus ? 
             window.calculateMedicalStatus(membre.validiteCertificatMedical) : 
             (membre.medical || 'INCONNU');
-        setTextContent('medical', medicalStatus);
+        
+        // Mettre à jour le statut médical avec les classes CSS appropriées
+        const medicalElement = document.getElementById('medical');
+        if (medicalElement) {
+            medicalElement.textContent = medicalStatus;
+            // Supprimer les anciennes classes
+            medicalElement.classList.remove('ok', 'pas-ok', 'inconnu');
+            // Ajouter la classe appropriée basée sur le statut
+            if (medicalStatus === 'OK') {
+                medicalElement.classList.add('ok');
+            } else if (medicalStatus === 'PAS OK') {
+                medicalElement.classList.add('pas-ok');
+            } else {
+                medicalElement.classList.add('inconnu');
+            }
+        }
         setTextContent('dateCertificatMedical', formatDate(membre.dateCertificatMedical));
         setTextContent('validiteCertificatMedical', formatDate(membre.validiteCertificatMedical));
         setTextContent('dateECG', formatDate(membre.dateECG));
