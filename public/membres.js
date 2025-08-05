@@ -75,6 +75,34 @@ function testMedicalStatusCalculation() {
 // Rendre la fonction de test disponible globalement
 window.testMedicalStatusCalculation = testMedicalStatusCalculation;
 
+// Fonction de diagnostic pour vérifier les données des membres
+function debugMemberData() {
+    console.log('🔍 Diagnostic des données membres:');
+    
+    if (currentMembers && currentMembers.length > 0) {
+        console.log(`Nombre de membres chargés: ${currentMembers.length}`);
+        
+        // Analyser les premiers membres
+        currentMembers.slice(0, 3).forEach((member, index) => {
+            console.log(`\n--- Membre ${index + 1} ---`);
+            console.log('ID:', member.id);
+            console.log('Nom:', `"${member.nom}"`);
+            console.log('Prénom:', `"${member.prenom}"`);
+            console.log('Email1:', `"${member.email1}"`);
+            console.log('ValiditéCertifMed:', `"${member.validiteCertificatMedical}"`);
+            console.log('Medical calculé:', calculateMedicalStatus(member.validiteCertificatMedical));
+            
+            // Afficher toutes les clés pour déboguer
+            console.log('Toutes les clés:', Object.keys(member));
+        });
+    } else {
+        console.log('❌ Aucun membre chargé dans currentMembers');
+    }
+}
+
+// Rendre la fonction disponible globalement
+window.debugMemberData = debugMemberData;
+
 // Debug function to check library availability
 function checkLibraries() {
     logger.debug('Library availability check', {
@@ -533,7 +561,7 @@ window.continueExcelImport = async function() {
                 lifrasID: getCleanValue(columnMapping.lifrasID),
                 nrFebras: getCleanValue(columnMapping.nrFebras),
                 nom: getCleanValue(columnMapping.nom),
-                prenom: extractFirstName(columnMapping.prenom),
+                prenom: getCleanValue(columnMapping.prenom),
                 adresse: getCleanValue(columnMapping.adresse),
                 codePostal: getCleanValue(columnMapping.codePostal),
                 localite: getCleanValue(columnMapping.localite),
