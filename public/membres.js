@@ -337,20 +337,24 @@ window.continueExcelImport = async function() {
         // Create mapping of field names to column indices
         const columnMapping = {
             lifrasID: findColumnIndex('LifrasID'),
-            nrFebras: findColumnIndex('NrFebras'),
+            nrFebras: findColumnIndex('Nr.Febras'),
             nom: findColumnIndex('Nom'),
-            prenom: findColumnIndex('Prenom'),
+            prenom: findColumnIndex('Prénom'),
             adresse: findColumnIndex('Adresse'),
             codePostal: findColumnIndex('Code postal'),
             localite: findColumnIndex('Localité'),
-            email1: findColumnIndex('Email'),
+            email1: findColumnIndex('Email 1'),
+            email2: findColumnIndex('Email 2'),
+            email3: findColumnIndex('Email 3'),
             telephonePrive: findColumnIndex('Téléphone privé'),
             telephoneBureau: findColumnIndex('Téléphone bureau'),
-            gsm1: findColumnIndex('GSM'),
+            gsm1: findColumnIndex('GSM 1'),
+            gsm2: findColumnIndex('GSM 2'),
+            gsm3: findColumnIndex('GSM 3'),
             dateCertificatMedical: findColumnIndex('Date du certificat médical'),
             validiteCertificatMedical: findColumnIndex('Validité du certificat médical'),
-            dateECG: findColumnIndex('Date du ECG'),
-            validiteECG: findColumnIndex('Validité du ECG'),
+            dateECG: findColumnIndex('Date du E.C.G.'),
+            validiteECG: findColumnIndex('Validité du E.C.G.'),
             ice: findColumnIndex('ICE'),
             description: findColumnIndex('Description'),
             pays: findColumnIndex('Pays'),
@@ -359,7 +363,8 @@ window.continueExcelImport = async function() {
             langue: findColumnIndex('Langue'),
             nationalite: findColumnIndex('Nationalité'),
             newsletter: findColumnIndex('Newsletter'),
-            typeCertif1: findColumnIndex('Type de certif'),
+            typeCertif1: findColumnIndex('Type de certif.1'),
+            typeCertif2: findColumnIndex('Type de certif.2'),
             plongeur: findColumnIndex('Plongeur'),
             apneiste: findColumnIndex('Apnéiste'),
             gasBlender: findColumnIndex('Gas Blender'),
@@ -382,20 +387,6 @@ window.continueExcelImport = async function() {
         };
         
         console.log('Column mapping created:', columnMapping);
-        
-        // Handle duplicate fields by finding multiple instances
-        const emailIndices = [];
-        const gsmIndices = [];
-        const typeCertifIndices = [];
-        
-        headers.forEach((header, index) => {
-            const headerStr = String(header || '').toLowerCase().trim();
-            if (headerStr === 'email') emailIndices.push(index);
-            if (headerStr === 'gsm') gsmIndices.push(index);
-            if (headerStr === 'type de certif') typeCertifIndices.push(index);
-        });
-        
-        console.log('Duplicate field indices:', { emailIndices, gsmIndices, typeCertifIndices });
 
         // Process the data, starting from row 1 (skip headers)
         const processedData = jsonData.slice(1).map((row, index) => {
@@ -450,14 +441,14 @@ window.continueExcelImport = async function() {
                 adresse: getCleanValue(columnMapping.adresse),
                 codePostal: getCleanValue(columnMapping.codePostal),
                 localite: getCleanValue(columnMapping.localite),
-                email1: getCleanValue(emailIndices[0] || -1),
-                email2: getCleanValue(emailIndices[1] || -1),
-                email3: getCleanValue(emailIndices[2] || -1),
+                email1: getCleanValue(columnMapping.email1),
+                email2: getCleanValue(columnMapping.email2),
+                email3: getCleanValue(columnMapping.email3),
                 telephonePrive: getCleanValue(columnMapping.telephonePrive),
                 telephoneBureau: getCleanValue(columnMapping.telephoneBureau),
-                gsm1: getCleanValue(gsmIndices[0] || -1),
-                gsm2: getCleanValue(gsmIndices[1] || -1),
-                gsm3: getCleanValue(gsmIndices[2] || -1),
+                gsm1: getCleanValue(columnMapping.gsm1),
+                gsm2: getCleanValue(columnMapping.gsm2),
+                gsm3: getCleanValue(columnMapping.gsm3),
                 dateCertificatMedical: getCleanValue(columnMapping.dateCertificatMedical),
                 validiteCertificatMedical: getCleanValue(columnMapping.validiteCertificatMedical),
                 dateECG: getCleanValue(columnMapping.dateECG),
@@ -470,8 +461,8 @@ window.continueExcelImport = async function() {
                 langue: getCleanValue(columnMapping.langue),
                 nationalite: getCleanValue(columnMapping.nationalite),
                 newsletter: getCleanValue(columnMapping.newsletter),
-                typeCertif1: getCleanValue(typeCertifIndices[0] || -1),
-                typeCertif2: getCleanValue(typeCertifIndices[1] || -1),
+                typeCertif1: getCleanValue(columnMapping.typeCertif1),
+                typeCertif2: getCleanValue(columnMapping.typeCertif2),
                 plongeur: getCleanValue(columnMapping.plongeur),
                 apneiste: getCleanValue(columnMapping.apneiste),
                 gasBlender: getCleanValue(columnMapping.gasBlender),
@@ -562,21 +553,32 @@ async function importMembres(data) {
             const membreRef = window.db.collection('membres').doc();
             const membreData = {
                 lifrasID: row.lifrasID || '',
+                nrFebras: row.nrFebras || '',
                 nom: row.nom || '',
                 prenom: row.prenom || '',
                 email1: row.email1 || '',
                 email2: row.email2 || '',
+                email3: row.email3 || '',
                 telephonePrive: row.telephonePrive || '',
                 telephoneBureau: row.telephoneBureau || '',
+                gsm1: row.gsm1 || '',
+                gsm2: row.gsm2 || '',
+                gsm3: row.gsm3 || '',
                 adresse: row.adresse || '',
                 codePostal: row.codePostal || '',
                 localite: row.localite || '',
                 pays: row.pays || '',
                 dateNaissance: row.dateNaissance || '',
                 lieuNaissance: row.lieuNaissance || '',
+                dateCertificatMedical: row.dateCertificatMedical || '',
+                validiteCertificatMedical: row.validiteCertificatMedical || '',
+                dateECG: row.dateECG || '',
+                validiteECG: row.validiteECG || '',
+                ice: row.ice || '',
                 langue: row.langue || '',
                 nationalite: row.nationalite || '',
                 newsletter: row.newsletter || '',
+                description: row.description || '',
                 typeCertif1: row.typeCertif1 || '',
                 typeCertif2: row.typeCertif2 || '',
                 plongeur: row.plongeur || '',
