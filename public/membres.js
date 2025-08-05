@@ -463,7 +463,7 @@ window.continueExcelImport = async function() {
             lifrasID: findColumnIndex('LifrasID'),
             nrFebras: findColumnIndex('Nr.Febras'),
             nom: findColumnIndex('Nom'),
-            prenom: findColumnIndex('Prénom'),
+            prenom: findColumnIndex('Prenom'),
             adresse: findColumnIndex('Adresse'),
             codePostal: findColumnIndex('Code postal'),
             localite: findColumnIndex('Localité'),
