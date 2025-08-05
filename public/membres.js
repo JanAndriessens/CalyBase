@@ -248,18 +248,19 @@ async function readExcelFile(file) {
                 console.log('XLSX library version:', XLSX.version);
                 const data = new Uint8Array(e.target.result);
                 
-                // XLSX-optimized options for reliable French character support
+                // XLSX-optimized options for reliable French character support AND date handling
                 const workbook = XLSX.read(data, { 
                     type: 'array',
                     codepage: 65001,  // UTF-8 for XLSX files (better than Windows-1252 for modern format)
-                    cellDates: true,
-                    cellNF: false,
-                    cellText: true,   // Use formatted text to preserve encoding
+                    cellDates: true,  // Parse dates as Date objects
+                    cellNF: false,    // Don't include number formats
+                    cellText: false,  // Don't use formatted text - this can break dates!
                     WTF: false,       // Don't write through formatting errors
-                    raw: false,       // Preserve formatted text with French accents
+                    raw: false,       // Use formatted values, not raw values
                     cellFormula: false,
                     cellHTML: false,  // Don't parse HTML content
-                    dense: false      // Use standard format for better parsing
+                    dense: false,     // Use standard format for better parsing
+                    UTC: false        // Use local timezone for dates
                 });
 
                 console.log('Workbook sheets:', workbook.SheetNames);
@@ -267,11 +268,47 @@ async function readExcelFile(file) {
                 
                 // Convert Excel to CSV format for more reliable parsing
                 console.log('Converting Excel to CSV format...');
-                const csvData = XLSX.utils.sheet_to_csv(firstSheet, {
-                    FS: '\t',         // Use tab separator for better field separation
-                    RS: '\n',         // Use newline for row separation
-                    dateNF: 'yyyy-mm-dd'
+                
+                // DEBUG: Check how dates are stored in the sheet
+                const range = XLSX.utils.decode_range(firstSheet['!ref']);
+                console.log('Sheet range:', range);
+                
+                // Check some date cells to see their format
+                for (let R = 0; R <= Math.min(2, range.e.r); ++R) {
+                    for (let C = 0; C <= Math.min(25, range.e.c); ++C) {
+                        const cellAddress = XLSX.utils.encode_cell({c: C, r: R});
+                        const cell = firstSheet[cellAddress];
+                        if (cell && cell.t === 'd') {
+                            console.log(`Date cell ${cellAddress}:`, cell);
+                        }
+                    }
+                }
+                
+                // Try a different approach: convert to JSON first to preserve date objects
+                console.log('Converting Excel to JSON format to preserve dates...');
+                const jsonRawData = XLSX.utils.sheet_to_json(firstSheet, { 
+                    header: 1,        // Use first row as headers
+                    defval: '',       // Default value for empty cells
+                    blankrows: false, // Skip blank rows
+                    dateNF: 'yyyy-mm-dd'  // Date format
                 });
+                
+                console.log('JSON conversion complete. Sample data:', jsonRawData.slice(0, 3));
+                
+                // Convert back to CSV-like format but with proper date handling
+                const csvData = jsonRawData.map(row => {
+                    return row.map(cell => {
+                        // Handle Date objects properly
+                        if (cell instanceof Date) {
+                            // Format date as YYYY-MM-DD
+                            const year = cell.getFullYear();
+                            const month = String(cell.getMonth() + 1).padStart(2, '0');
+                            const day = String(cell.getDate()).padStart(2, '0');
+                            return `${year}-${month}-${day}`;
+                        }
+                        return String(cell || '');
+                    }).join('\t');
+                }).join('\n');
 
                 console.log('CSV conversion complete. First 500 characters:', csvData.substring(0, 500));
                 
