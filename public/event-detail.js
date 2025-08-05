@@ -776,11 +776,6 @@ function displayMembers(members) {
         
         contentDiv.innerHTML = `
             <h3>${member.prenom} ${member.nom}</h3>
-            <div class="member-info">
-                <p style="margin: 0.25rem 0; font-size: 0.8rem; color: #666;">
-                    Certificat: ${member.validiteCertificatMedical || 'Non renseigné'}
-                </p>
-            </div>
         `;
         contentDiv.appendChild(medicalBadge);
         
