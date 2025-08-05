@@ -845,8 +845,7 @@ async function loadMembers() {
                 <td>${member.prenom || ''}</td>
                 <td>${calculateMedicalStatus(member.validiteCertificatMedical)}</td>
                 <td>
-                    <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3; margin-right: 5px;">Détails</button>
-                    <button class="action-button edit-member-btn" data-member-id="${member.id}" style="background: #4CAF50;">Modifier</button>
+                    <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3;">Détails</button>
                 </td>
             `;
             membresTableBody.appendChild(row);
@@ -860,13 +859,6 @@ async function loadMembers() {
             button.addEventListener('click', function() {
                 const memberId = this.getAttribute('data-member-id');
                 viewMemberDetails(memberId);
-            });
-        });
-        
-        document.querySelectorAll('.edit-member-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const memberId = this.getAttribute('data-member-id');
-                editMember(memberId);
             });
         });
         
@@ -929,8 +921,7 @@ function filterMembers(searchTerm) {
             <td>${member.prenom || ''}</td>
             <td>${calculateMedicalStatus(member.validiteCertificatMedical)}</td>
             <td>
-                <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3; margin-right: 5px;">Détails</button>
-                <button class="action-button edit-member-btn" data-member-id="${member.id}" style="background: #4CAF50;">Modifier</button>
+                <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3;">Détails</button>
             </td>
         `;
         membresTableBody.appendChild(row);
@@ -944,13 +935,6 @@ function filterMembers(searchTerm) {
         button.addEventListener('click', function() {
             const memberId = this.getAttribute('data-member-id');
             viewMemberDetails(memberId);
-        });
-    });
-    
-    document.querySelectorAll('.edit-member-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const memberId = this.getAttribute('data-member-id');
-            editMember(memberId);
         });
     });
     
@@ -971,13 +955,8 @@ function viewMemberDetails(memberId) {
     window.location.href = `/membre-detail.html?id=${memberId}&mode=view`;
 }
 
-function editMember(memberId) {
-    window.location.href = `/membre-detail.html?id=${memberId}&mode=edit`;
-}
-
 // Make functions available globally
 window.viewMemberDetails = viewMemberDetails;
-window.editMember = editMember;
 
 // ⚡ OPTIMIZED: Batch avatar loading with reduced database queries
 async function loadMemberAvatarsAsync(members) {
@@ -1274,9 +1253,8 @@ async function applyMemberActionPermissions() {
         console.log('🔧 [DEBUG] Starting applyMemberActionPermissions...');
         
         const viewButtons = document.querySelectorAll('.view-member-btn');
-        const editButtons = document.querySelectorAll('.edit-member-btn');
         
-        console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons and ${editButtons.length} edit buttons`);
+        console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons`);
         
         // ⚡ Details (view) buttons are ALWAYS visible - no permission check needed
         viewButtons.forEach(button => {
@@ -1285,59 +1263,20 @@ async function applyMemberActionPermissions() {
         });
         console.log('✅ [DEBUG] View member buttons ALWAYS VISIBLE - no permission check required');
         
-        // ⚡ Hide edit buttons initially for secure default
-        editButtons.forEach(button => {
-            button.style.display = 'none';
-            button.disabled = true;
-        });
-        
-        console.log('🔧 [DEBUG] Edit buttons hidden, now checking edit permissions... (deployment test)');
-
-        // ⚡ Only check edit permissions - view permissions not needed
-        console.log('🔧 [DEBUG] Calling canEditMember()...');
-        
-        // ⚡ Use timeout to prevent hanging on permission check
-        let canEdit = false;
-        try {
-            const editPermissionPromise = canEditMember();
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(false), 2000));
-            canEdit = await Promise.race([editPermissionPromise, timeoutPromise]);
-        } catch (permError) {
-            console.warn('🔧 [DEBUG] Edit permission check failed, defaulting to false:', permError);
-            canEdit = false;
-        }
-        
-        console.log('📋 [DEBUG] Member action permissions result:', { canEdit });
-        
-        // ⚡ Show edit buttons only if permitted
-        if (canEdit) {
-            editButtons.forEach(button => {
-                button.style.display = '';
-                button.disabled = false;
-            });
-            console.log('✅ [DEBUG] Edit member buttons VISIBLE - permission granted');
-        } else {
-            console.log('🚫 [DEBUG] Edit member buttons HIDDEN - no permission or timeout');
-        }
+        console.log('✅ [DEBUG] Member action permissions applied - only view buttons available');
         
         console.log('🔧 [DEBUG] applyMemberActionPermissions completed successfully');
         
     } catch (error) {
         console.error('❌ [DEBUG] Member action permissions check failed:', error);
-        console.warn('⚠️ Member action permissions check failed, keeping view buttons visible, edit buttons hidden for security');
+        console.warn('⚠️ Member action permissions check failed, keeping view buttons visible for security');
         
-        // ⚡ On error, ensure view buttons remain visible but edit buttons stay hidden
+        // ⚡ On error, ensure view buttons remain visible
         const viewButtons = document.querySelectorAll('.view-member-btn');
-        const editButtons = document.querySelectorAll('.edit-member-btn');
         
         viewButtons.forEach(button => {
             button.style.display = '';
             button.disabled = false;
-        });
-        
-        editButtons.forEach(button => {
-            button.style.display = 'none';
-            button.disabled = true;
         });
     }
 }
@@ -1467,16 +1406,11 @@ window.debugMembresPermissions = async function() {
     try {
         // Check button elements
         const viewButtons = document.querySelectorAll('.view-member-btn');
-        const editButtons = document.querySelectorAll('.edit-member-btn');
         
-        console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons and ${editButtons.length} edit buttons`);
+        console.log(`🔧 [DEBUG] Found ${viewButtons.length} view buttons`);
         
         viewButtons.forEach((btn, index) => {
             console.log(`🔧 [DEBUG] View button ${index}: display=${btn.style.display}, disabled=${btn.disabled}`);
-        });
-        
-        editButtons.forEach((btn, index) => {
-            console.log(`🔧 [DEBUG] Edit button ${index}: display=${btn.style.display}, disabled=${btn.disabled}`);
         });
         
         // Test permission functions
