@@ -267,24 +267,7 @@ async function readExcelFile(file) {
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 
                 // Convert Excel to CSV format for more reliable parsing
-                console.log('Converting Excel to CSV format...');
-                
-                // DEBUG: Check how dates are stored in the sheet
-                const range = XLSX.utils.decode_range(firstSheet['!ref']);
-                console.log('Sheet range:', range);
-                
-                // Check some date cells to see their format
-                for (let R = 0; R <= Math.min(2, range.e.r); ++R) {
-                    for (let C = 0; C <= Math.min(25, range.e.c); ++C) {
-                        const cellAddress = XLSX.utils.encode_cell({c: C, r: R});
-                        const cell = firstSheet[cellAddress];
-                        if (cell && cell.t === 'd') {
-                            console.log(`Date cell ${cellAddress}:`, cell);
-                        }
-                    }
-                }
-                
-                // Try a different approach: convert to JSON first to preserve date objects
+                // Convert Excel to JSON format to preserve date objects AND handle date strings
                 console.log('Converting Excel to JSON format to preserve dates...');
                 const jsonRawData = XLSX.utils.sheet_to_json(firstSheet, { 
                     header: 1,        // Use first row as headers
@@ -306,6 +289,19 @@ async function readExcelFile(file) {
                             const day = String(cell.getDate()).padStart(2, '0');
                             return `${year}-${month}-${day}`;
                         }
+                        
+                        // Handle date strings in dd/mm/yyyy format
+                        if (typeof cell === 'string' && cell.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                            const parts = cell.split('/');
+                            if (parts.length === 3) {
+                                const day = parts[0];
+                                const month = parts[1];
+                                const year = parts[2];
+                                // Convert dd/mm/yyyy to yyyy-mm-dd
+                                return `${year}-${month}-${day}`;
+                            }
+                        }
+                        
                         return String(cell || '');
                     }).join('\t');
                 }).join('\n');
