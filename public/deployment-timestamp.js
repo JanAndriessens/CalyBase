@@ -1,15 +1,21 @@
 // Deployment timestamp verification
-console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit FIREBASE-AUTH-TRIGGERS-AUTO-FIRESTORE-DOCS');
-console.log('✅ LATEST DEPLOYMENT: Implement Firebase Auth triggers for automatic Firestore document creation');
-console.log('🎯 IF YOU SEE THIS: Future users will automatically get Firestore documents + Run fixJamesHughesAccount() for James');
+console.log('🕐 DEPLOYMENT TIMESTAMP: ' + new Date().toLocaleString() + ' - Commit WHO-IS-WHO-DIRECTORY-FEATURE');
+console.log('✅ LATEST DEPLOYMENT: Complete "Who is Who" member directory with bigger avatars');
+console.log('📋 NEW FEATURES: Member directory, multi-format exports, responsive design with enhanced avatar sizes');
 
 // Global deployment info
 window.DEPLOYMENT_INFO = {
-    commit: 'FIREBASE-AUTH-TRIGGERS-AUTO-FIRESTORE-DOCS',
+    commit: 'WHO-IS-WHO-DIRECTORY-FEATURE',
     timestamp: new Date().toISOString(),
-    approach: 'Add beforeUserCreated and beforeUserSignedIn triggers to automatically create Firestore documents',
+    features: [
+        'Complete Who is Who member directory',
+        'Multi-format export system (CSV, ZIP, PDF, JSON)',
+        'Enhanced avatar sizes (120px desktop, 90px mobile)',
+        'Responsive grid layout with print optimization',
+        'Role-based access control and permissions'
+    ],
     expectedLogs: [
-        '🎯 Future users will automatically get Firestore documents + Run fixJamesHughesAccount() for James',
-        '✅ Firebase Auth triggers deployed for automatic user document creation'
+        '📋 NEW FEATURES: Member directory, multi-format exports, responsive design with enhanced avatar sizes',
+        '✅ Who is Who directory fully functional with bigger member photos'
     ]
 };
