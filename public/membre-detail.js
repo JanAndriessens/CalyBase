@@ -515,7 +515,11 @@ function displayMembreDetails(membre) {
 
         // Certifications
         console.log('Affichage des certifications...');
-        setTextContent('medical', membre.medical);
+        // Calculer le statut médical en temps réel basé sur la validité du certificat
+        const medicalStatus = window.calculateMedicalStatus ? 
+            window.calculateMedicalStatus(membre.validiteCertificatMedical) : 
+            (membre.medical || 'INCONNU');
+        setTextContent('medical', medicalStatus);
         setTextContent('dateCertificatMedical', formatDate(membre.dateCertificatMedical));
         setTextContent('validiteCertificatMedical', formatDate(membre.validiteCertificatMedical));
         setTextContent('dateECG', formatDate(membre.dateECG));

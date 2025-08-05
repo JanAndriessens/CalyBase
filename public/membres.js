@@ -12,6 +12,69 @@ let currentMembers = [];
 // Create module-specific logger
 const logger = new Logger('Membres');
 
+// Fonction centralisée pour calculer le statut médical
+function calculateMedicalStatus(validiteCertificatMedical) {
+    // Si pas de date de validité, statut inconnu
+    if (!validiteCertificatMedical || validiteCertificatMedical.trim() === '') {
+        return 'INCONNU';
+    }
+    
+    try {
+        // Créer les dates pour comparaison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Réinitialiser à minuit pour comparaison de dates seulement
+        
+        const validityDate = new Date(validiteCertificatMedical);
+        validityDate.setHours(23, 59, 59, 999); // Fin de journée pour la date de validité
+        
+        // Vérifier si la date est valide
+        if (isNaN(validityDate.getTime())) {
+            return 'INCONNU';
+        }
+        
+        // Comparer les dates
+        return validityDate >= today ? 'OK' : 'PAS OK';
+        
+    } catch (error) {
+        console.error('Erreur lors du calcul du statut médical:', error);
+        return 'INCONNU';
+    }
+}
+
+// Rendre la fonction disponible globalement pour autres modules
+window.calculateMedicalStatus = calculateMedicalStatus;
+
+// Fonction de test pour vérifier le calcul du statut médical
+function testMedicalStatusCalculation() {
+    console.log('🧪 Test du calcul du statut médical:');
+    
+    // Test avec date future (valide)
+    const futureDate = '2026-12-31';
+    console.log(`Date future (${futureDate}):`, calculateMedicalStatus(futureDate));
+    
+    // Test avec date passée (expirée)
+    const pastDate = '2023-01-15';
+    console.log(`Date passée (${pastDate}):`, calculateMedicalStatus(pastDate));
+    
+    // Test avec date aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    console.log(`Date aujourd'hui (${today}):`, calculateMedicalStatus(today));
+    
+    // Test avec date vide
+    console.log('Date vide (""):', calculateMedicalStatus(''));
+    
+    // Test avec date null
+    console.log('Date null:', calculateMedicalStatus(null));
+    
+    // Test avec date invalide
+    console.log('Date invalide ("abc"):', calculateMedicalStatus('abc'));
+    
+    console.log('✅ Tests terminés');
+}
+
+// Rendre la fonction de test disponible globalement
+window.testMedicalStatusCalculation = testMedicalStatusCalculation;
+
 // Debug function to check library availability
 function checkLibraries() {
     logger.debug('Library availability check', {
@@ -633,7 +696,7 @@ async function importMembres(data) {
                 medecin: row.medecin || '',
                 derniereModif: firebase.firestore.FieldValue.serverTimestamp(),
                 licenceFD: row.licenceFD || '',
-                medical: row.medical || ''
+                medical: calculateMedicalStatus(row.validiteCertificatMedical)
             };
 
             console.log('Member data to be imported:', membreData);
@@ -752,7 +815,7 @@ async function loadMembers() {
                 </td>
                 <td>${member.nom || ''}</td>
                 <td>${member.prenom || ''}</td>
-                <td>${member.medical || ''}</td>
+                <td>${calculateMedicalStatus(member.validiteCertificatMedical)}</td>
                 <td>
                     <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3; margin-right: 5px;">Détails</button>
                     <button class="action-button edit-member-btn" data-member-id="${member.id}" style="background: #4CAF50;">Modifier</button>
@@ -836,7 +899,7 @@ function filterMembers(searchTerm) {
             </td>
             <td>${member.nom || ''}</td>
             <td>${member.prenom || ''}</td>
-            <td>${member.medical || ''}</td>
+            <td>${calculateMedicalStatus(member.validiteCertificatMedical)}</td>
             <td>
                 <button class="action-button view-member-btn" data-member-id="${member.id}" style="background: #2196F3; margin-right: 5px;">Détails</button>
                 <button class="action-button edit-member-btn" data-member-id="${member.id}" style="background: #4CAF50;">Modifier</button>
@@ -995,8 +1058,11 @@ async function updateAllMembersMedical() {
         let currentBatch = window.db.batch();
 
         for (const doc of membersSnapshot.docs) {
+            const memberData = doc.data();
+            const calculatedMedicalStatus = calculateMedicalStatus(memberData.validiteCertificatMedical);
+            
             currentBatch.update(doc.ref, { 
-                medical: 'OK',
+                medical: calculatedMedicalStatus,
                 derniereModif: firebase.firestore.FieldValue.serverTimestamp()
             });
             batchCount++;
