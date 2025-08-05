@@ -10,6 +10,26 @@ let searchTermParticipants = '';
 let searchDebounceTimer;
 let participantSearchDebounceTimer;
 
+// Fonction pour calculer le statut médical basé sur la validité du certificat
+function calculateMedicalStatus(validiteCertificatMedical) {
+    if (!validiteCertificatMedical || validiteCertificatMedical.trim() === '') {
+        return 'INCONNU';
+    }
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const validityDate = new Date(validiteCertificatMedical);
+        validityDate.setHours(23, 59, 59, 999);
+        if (isNaN(validityDate.getTime())) {
+            return 'INCONNU';
+        }
+        return validityDate >= today ? 'OK' : 'PAS OK';
+    } catch (error) {
+        console.error('Erreur lors du calcul du statut médical:', error);
+        return 'INCONNU';
+    }
+}
+
 // DOM Elements
 const eventDescriptionEdit = document.getElementById('eventDescriptionEdit');
 const eventDateEdit = document.getElementById('eventDateEdit');
@@ -263,13 +283,23 @@ async function loadMembers() {
             // Vérifier si le membre n'est pas déjà participant
             const isParticipant = participants.some(p => p.lifrasid === lifrasid);
             if (!isParticipant) {
+                // Calculer le statut médical
+                const medicalStatus = calculateMedicalStatus(memberData.validiteCertificatMedical);
+                
                 const member = {
                     lifrasid: lifrasid,
                     prenom: memberData.prenom || '',
                     nom: memberData.nom || '',
-                    lifrasID: memberData.lifrasID
+                    lifrasID: memberData.lifrasID,
+                    validiteCertificatMedical: memberData.validiteCertificatMedical,
+                    medicalStatus: medicalStatus
                 };
                 allMembers.push(member);
+                
+                // Log pour debug
+                if (medicalStatus === 'PAS OK') {
+                    console.log(`⚠️ Membre avec certificat expiré: ${memberData.prenom} ${memberData.nom} (${lifrasid}) - Validité: ${memberData.validiteCertificatMedical}`);
+                }
             } else {
                 membersFiltered++;
             }
@@ -508,6 +538,19 @@ function setupEventListeners() {
 // Fonction pour ajouter un participant
 async function addParticipant(member) {
     try {
+        // VALIDATION MÉDICALE STRICTE
+        const medicalStatus = member.medicalStatus || calculateMedicalStatus(member.validiteCertificatMedical);
+        
+        if (medicalStatus === 'PAS OK') {
+            alert(`❌ PARTICIPATION REFUSÉE\n\n` +
+                  `Ce membre ne peut pas participer à l'événement.\n\n` +
+                  `Membre: ${member.prenom} ${member.nom}\n` +
+                  `Raison: Certificat médical expiré ou invalide\n` +
+                  `Validité: ${member.validiteCertificatMedical || 'Non renseignée'}\n\n` +
+                  `Action requise: Le membre doit renouveler son certificat médical valide pour pouvoir participer aux activités.`);
+            return;
+        }
+        
         const eventRef = window.db.collection('events').doc(eventId);
         const eventDoc = await eventRef.get();
         const event = eventDoc.data();
@@ -518,12 +561,26 @@ async function addParticipant(member) {
             return;
         }
         
+        // Avertissement pour statut INCONNU
+        if (medicalStatus === 'INCONNU') {
+            const confirm = window.confirm(`⚠️ STATUT MÉDICAL INCONNU\n\n` +
+                                         `Membre: ${member.prenom} ${member.nom}\n` +
+                                         `Le statut médical de ce membre est inconnu.\n\n` +
+                                         `Voulez-vous quand même l'ajouter comme participant ?\n` +
+                                         `(Il est recommandé de vérifier son certificat médical d'abord)`);
+            if (!confirm) {
+                return;
+            }
+        }
+        
         // Ajouter le participant
         await eventRef.update({
             participants: firebase.firestore.FieldValue.arrayUnion({
                 lifrasid: member.lifrasid
             })
         });
+        
+        console.log(`✅ Participant ajouté: ${member.prenom} ${member.nom} (Statut médical: ${medicalStatus})`);
         
         // Recharger les listes
         await loadParticipants(eventId);
@@ -673,10 +730,15 @@ function displayMembers(members) {
 
     members.forEach((member, index) => {
         try {
-            console.log(`🔍 [DISPLAY DEBUG] Processing member ${index + 1}/${members.length}:`, member.prenom, member.nom);
+            console.log(`🔍 [DISPLAY DEBUG] Processing member ${index + 1}/${members.length}:`, member.prenom, member.nom, `(Medical: ${member.medicalStatus})`);
         const memberCard = document.createElement('div');
         memberCard.className = 'member-card';
         memberCard.setAttribute('data-lifras-id-member', member.lifrasID);
+        
+        // Ajouter la classe pour les membres non éligibles
+        if (member.medicalStatus === 'PAS OK') {
+            memberCard.classList.add('medical-invalid');
+        }
         
         // Créer l'élément pour l'avatar
         const avatarDiv = document.createElement('div');
@@ -703,18 +765,42 @@ function displayMembers(members) {
 
         avatarDiv.appendChild(avatarImg);
         
-        // Créer le contenu de la carte
+        // Créer le contenu de la carte avec badge médical
         const contentDiv = document.createElement('div');
         contentDiv.className = 'member-content';
+        
+        // Créer le badge de statut médical
+        const medicalBadge = document.createElement('span');
+        medicalBadge.className = `medical-status ${member.medicalStatus.toLowerCase().replace(' ', '-')}`;
+        medicalBadge.textContent = member.medicalStatus;
+        
         contentDiv.innerHTML = `
             <h3>${member.prenom} ${member.nom}</h3>
+            <div class="member-info">
+                <p style="margin: 0.25rem 0; font-size: 0.8rem; color: #666;">
+                    Certificat: ${member.validiteCertificatMedical || 'Non renseigné'}
+                </p>
+            </div>
         `;
+        contentDiv.appendChild(medicalBadge);
         
         // Créer le bouton d'ajout
         const addButton = document.createElement('button');
         addButton.className = 'add-participant';
         addButton.innerHTML = '<i class="fas fa-plus"></i>';
-        addButton.onclick = () => addParticipant(member);
+        
+        // Désactiver le bouton pour les membres non éligibles
+        if (member.medicalStatus === 'PAS OK') {
+            addButton.disabled = true;
+            addButton.title = 'Ce membre ne peut pas participer : certificat médical expiré';
+            addButton.style.cursor = 'not-allowed';
+            addButton.style.opacity = '0.5';
+        } else {
+            addButton.onclick = () => addParticipant(member);
+            if (member.medicalStatus === 'INCONNU') {
+                addButton.title = 'Attention : statut médical inconnu';
+            }
+        }
         
         // Assembler la carte
         memberCard.appendChild(avatarDiv);
