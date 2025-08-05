@@ -365,8 +365,8 @@ body {
 }
 
 .member-avatar-container {
-    width: 80px;
-    height: 80px;
+    width: 120px;
+    height: 120px;
     margin-bottom: 1rem;
     border-radius: 50%;
     overflow: hidden;
@@ -476,8 +476,8 @@ body {
     }
     
     .member-avatar-container {
-        width: 60px;
-        height: 60px;
+        width: 90px;
+        height: 90px;
     }
 }
 
@@ -554,8 +554,8 @@ body {
     
     /* Avatar pour impression */
     .member-avatar-container {
-        width: 60pt;
-        height: 60pt;
+        width: 80pt;
+        height: 80pt;
         margin-bottom: 10pt;
         border: 2pt solid #333;
         border-radius: 50%;
@@ -641,8 +641,8 @@ body {
         }
         
         .member-avatar-container {
-            width: 50pt;
-            height: 50pt;
+            width: 70pt;
+            height: 70pt;
         }
         
         .member-prenom {
