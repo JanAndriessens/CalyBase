@@ -236,6 +236,10 @@ class MemberPermissions {
         return this.hasPermission('canManageMemberAvatars');
     }
 
+    // Check if user can view members
+    async canViewMembers() {
+        return this.hasPermission('canViewMembers');
+    }
     // Check if user can view member details
     async canViewMemberDetails() {
         return this.hasPermission('canViewMemberDetails');
@@ -327,6 +331,13 @@ window.canManageMemberAvatars = async function() {
     return window.memberPermissions.canManageMemberAvatars();
 };
 
+window.canViewMembers = async function() {
+    if (!window.memberPermissions.initialized) {
+        await window.memberPermissions.initialize();
+    }
+    return window.memberPermissions.canViewMembers();
+};
+
 window.canViewMemberDetails = async function() {
     if (!window.memberPermissions.initialized) {
         await window.memberPermissions.initialize();
@@ -356,6 +367,7 @@ window.debugMemberPermissions = async function() {
         
         // Test all member permissions
         const permissions = [
+            'canViewMembers',
             'canViewMemberDetails',
             'canModifyMembers',
             'canDeleteMembers',

@@ -78,6 +78,21 @@
             transform: scale(1.1);
             border-color: var(--primary-color);
         }
+        
+        /* Style pour le bouton Annuaire */
+        .action-button.special {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .action-button.special:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a42a0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -109,6 +124,7 @@
                     <button id="importExcelBtn" class="action-button">Importer Excel</button>
                     <button id="deleteAllBtn" class="action-button danger">Supprimer tous les membres</button>
                     <button id="updateMedicalBtn" class="action-button">Mettre à jour Medical</button>
+                    <button id="whoIsWhoBtn" class="action-button special">📋 Annuaire</button>
                 </div>
             </div>
             

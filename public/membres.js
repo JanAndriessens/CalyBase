@@ -5,6 +5,7 @@ const importExcelBtn = document.getElementById('importExcelBtn');
 const excelFileInput = document.getElementById('excelFileInput');
 const deleteAllBtn = document.getElementById('deleteAllBtn');
 const updateMedicalBtn = document.getElementById('updateMedicalBtn');
+const whoIsWhoBtn = document.getElementById('whoIsWhoBtn');
 
 // Add this variable at the top of the file with other DOM elements
 let currentMembers = [];
@@ -1283,6 +1284,13 @@ async function applyMemberActionPermissions() {
 
 // Excel Import Functionality with HTML Tag Cleaning
 // Note: DOM elements already declared at top of file (importExcelBtn, excelFileInput)
+
+// Add Who is who event listener
+if (whoIsWhoBtn) {
+    whoIsWhoBtn.addEventListener('click', () => {
+        window.location.href = '/who-is-who.html';
+    });
+}
 
 // Add Excel import event listeners
 if (importExcelBtn && excelFileInput) {
