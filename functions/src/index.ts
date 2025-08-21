@@ -26,6 +26,8 @@ const allowedOrigins = [
   'https://calybase.firebaseapp.com',
   'https://calybase.vercel.app',
   'https://caly-base.vercel.app',
+  'https://caly.club',
+  'https://www.caly.club',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5000'

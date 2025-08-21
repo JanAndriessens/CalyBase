@@ -16,7 +16,7 @@ service firebase.storage {
     }
     
     function isValidOrigin() {
-      return request.origin.matches('http://localhost:3001|https://calybase.web.app|https://calybase.firebaseapp.com');
+      return request.origin.matches('http://localhost:3001|https://calybase.web.app|https://calybase.firebaseapp.com|https://caly.club|https://www.caly.club');
     }
     
     // Rules for avatars (using lifrasID_timestamp pattern)

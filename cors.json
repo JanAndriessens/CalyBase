@@ -4,7 +4,9 @@
       "http://localhost:3001",
       "https://calybase.web.app",
       "https://calybase.firebaseapp.com",
-      "https://caly-base.vercel.app"
+      "https://caly-base.vercel.app",
+      "https://caly.club",
+      "https://www.caly.club"
     ],
     "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "maxAgeSeconds": 3600,
