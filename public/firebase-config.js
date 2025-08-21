@@ -3,11 +3,16 @@
 
 async function loadFirebaseConfig() {
     try {
+        // Debug: Log the current hostname
+        console.log('Current hostname:', window.location.hostname);
+        
         // For production deployment, use static config
         const isProduction = window.location.hostname.includes('calybase.web.app') || 
                             window.location.hostname.includes('calybase.firebaseapp.com') ||
                             window.location.hostname.includes('vercel.app') || // Covers all Vercel deployments
-                            window.location.hostname.includes('caly.club'); // New custom domain
+                            window.location.hostname.includes('caly.club') || // New custom domain
+                            window.location.hostname === 'caly.club' ||
+                            window.location.hostname === 'www.caly.club';
         
         if (isProduction) {
             console.log('✅ Using production Firebase configuration');
