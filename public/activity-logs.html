@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalyBase - Journaux d'Activité</title>
+    
+    <!-- DEPLOYMENT VERIFICATION -->
+    <script src="deployment-timestamp.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Application utilities -->
+    <script src="constants.js"></script>
+    <script src="device-utils.js"></script>
+    <script src="error-handler.js"></script>
+    <script src="logger.js"></script>
+    
+    <!-- CRITICAL: Firebase Config (MUST load first) -->
+    <script src="firebase-config.js?v=2024.08.21.1"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <style>
+        .activity-logs-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: var(--secondary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .logs-icon {
+            font-size: 2rem;
+            color: #666;
+            margin-right: 1rem;
+        }
+
+        .logs-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .logs-filter {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .filter-input, .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+
+        .logs-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-button {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-button.primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .action-button.secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .action-button.success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .action-button:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .logs-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .logs-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .logs-table th {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .logs-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .logs-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .log-timestamp {
+            font-size: 0.85rem;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .log-user {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .log-action {
+            font-weight: 600;
+        }
+
+        .log-category {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .category-authentication { background-color: #e3f2fd; color: #1565c0; }
+        .category-member_management { background-color: #f3e5f5; color: #7b1fa2; }
+        .category-data_import { background-color: #e8f5e8; color: #2e7d32; }
+        .category-administration { background-color: #fff3e0; color: #ef6c00; }
+        .category-data_access { background-color: #fce4ec; color: #c2185b; }
+        .category-security { background-color: #ffebee; color: #d32f2f; }
+        .category-navigation { background-color: #f1f8e9; color: #558b2f; }
+        .category-system { background-color: #f5f5f5; color: #616161; }
+
+        .log-details {
+            font-size: 0.85rem;
+            color: #666;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .log-details-expanded {
+            max-width: none;
+            white-space: pre-wrap;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        .expand-details {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.8rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .current-page {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-logs {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-logs i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .export-options {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 150px;
+            display: none;
+        }
+
+        .export-dropdown.show {
+            display: block;
+        }
+
+        .export-dropdown button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .export-dropdown button:hover {
+            background-color: #f8f9fa;
+        }
+
+        .export-dropdown button:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .activity-logs-container {
+                padding: 1rem;
+            }
+            
+            .logs-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .logs-filter {
+                flex-direction: column;
+            }
+            
+            .logs-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .logs-table-container {
+                overflow-x: auto;
+            }
+            
+            .logs-table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo-container">
+            <div class="logo-image">
+                <img src="images/CalypsoDC-VerticPos_rvb.png" alt="CalypsoDC Logo">
+            </div>
+            <div class="logo-text-container">
+                <div class="logo-text">CalyBase</div>
+                <div class="username-text" id="usernameText" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="/">Accueil</a>
+            <a href="/membres.html">Membres</a>
+            <a href="/events.html">Événements</a>
+            <a href="/activity-logs.html" class="active">Journaux</a>
+            <a href="/login.html" id="authLink">Déconnexion</a>
+        </div>
+    </nav>
+
+    <main class="activity-logs-container">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-clipboard-list logs-icon"></i>
+                Journaux d'Activité
+            </h1>
+            <div class="logs-actions">
+                <div class="export-options">
+                    <button class="action-button success" id="exportButton">
+                        <i class="fas fa-download"></i>
+                        Exporter
+                    </button>
+                    <div class="export-dropdown" id="exportDropdown">
+                        <button onclick="exportLogs('csv')">
+                            <i class="fas fa-file-csv"></i>
+                            Exporter CSV
+                        </button>
+                        <button onclick="exportLogs('json')">
+                            <i class="fas fa-file-code"></i>
+                            Exporter JSON
+                        </button>
+                    </div>
+                </div>
+                <button class="action-button primary" id="refreshButton">
+                    <i class="fas fa-sync-alt"></i>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+
+        <div class="logs-controls">
+            <div class="logs-filter">
+                <div class="filter-group">
+                    <label for="userFilter">Utilisateur</label>
+                    <select id="userFilter" class="filter-select">
+                        <option value="">Tous les utilisateurs</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="categoryFilter">Catégorie</label>
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">Toutes les catégories</option>
+                        <option value="authentication">Authentification</option>
+                        <option value="member_management">Gestion des membres</option>
+                        <option value="data_import">Importation de données</option>
+                        <option value="administration">Administration</option>
+                        <option value="data_access">Accès aux données</option>
+                        <option value="security">Sécurité</option>
+                        <option value="navigation">Navigation</option>
+                        <option value="system">Système</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="dateFromFilter">Date de début</label>
+                    <input type="date" id="dateFromFilter" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label for="dateToFilter">Date de fin</label>
+                    <input type="date" id="dateToFilter" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label for="searchFilter">Recherche</label>
+                    <input type="text" id="searchFilter" class="filter-input" placeholder="Rechercher dans les actions...">
+                </div>
+            </div>
+        </div>
+
+        <div class="logs-stats" id="logsStats">
+            <div class="stat-card">
+                <span class="stat-number" id="totalLogsCount">-</span>
+                <div class="stat-label">Total des entrées</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="todayLogsCount">-</span>
+                <div class="stat-label">Aujourd'hui</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="activeUsersCount">-</span>
+                <div class="stat-label">Utilisateurs actifs</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="securityEventsCount">-</span>
+                <div class="stat-label">Événements de sécurité</div>
+            </div>
+        </div>
+
+        <div class="logs-table-container">
+            <div class="loading-indicator" id="loadingIndicator">
+                <div class="loading-spinner"></div>
+                Chargement des journaux d'activité...
+            </div>
+            
+            <table class="logs-table" id="logsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Horodatage</th>
+                        <th>Utilisateur</th>
+                        <th>Action</th>
+                        <th>Catégorie</th>
+                        <th>Détails</th>
+                        <th>Session</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <!-- Logs will be inserted here dynamically -->
+                </tbody>
+            </table>
+
+            <div class="no-logs" id="noLogsMessage" style="display: none;">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>Aucun journal d'activité trouvé</h3>
+                <p>Aucune activité ne correspond aux critères de recherche sélectionnés.</p>
+            </div>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prevPageBtn" onclick="changePage(-1)">
+                <i class="fas fa-chevron-left"></i>
+                Précédent
+            </button>
+            <span id="pageInfo">Page 1 sur 1</span>
+            <button id="nextPageBtn" onclick="changePage(1)">
+                Suivant
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 CalyBase. Tous droits réservés.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="clear-cache.js"></script>
+    <script src="firebase-app.js"></script>
+    <script src="system-config.js"></script>
+    <script src="auth-guard.js"></script>
+    <script src="comprehensive-logout.js"></script>
+    <script src="navigation.js"></script>
+    <script src="simple-logout.js"></script>
+    <script src="session-manager.js"></script>
+    <script src="activity-logger.js"></script>
+    <script src="activity-logs.js"></script>
+
+</body>
+</html>

@@ -117,7 +117,7 @@
     <script src="deployment-timestamp.js"></script>
     
     <!-- CRITICAL: Firebase Config (MUST load first) - COPIED FROM WORKING MEMBRES.HTML -->
-    <script src="firebase-config.js"></script>
+    <script src="firebase-config.js?v=2024.08.21.1"></script>
     <!-- Firebase SDK - EXACT SAME AS MEMBRES.HTML -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -133,7 +133,7 @@
     <!-- Preload critical scripts for better performance -->
     <link rel="preload" href="device-utils.js" as="script">
     <link rel="preload" href="ipad-safari-fix.js" as="script">
-    <link rel="preload" href="firebase-config.js" as="script">
+    <link rel="preload" href="firebase-config.js?v=2024.08.21.1" as="script">
     <style>
         .dashboard-container {
             max-width: 1200px;
@@ -618,7 +618,7 @@
 
     <!-- Scripts - Optimized loading order with proper Firebase initialization -->
     <!-- CRITICAL: Firebase configuration must load first (synchronously) -->
-    <script src="firebase-config.js"></script>
+    <script src="firebase-config.js?v=2024.08.21.1"></script>
     
     <!-- Mobile/Device specific scripts (load early but non-blocking) -->
     <script src="device-utils.js" defer></script>
