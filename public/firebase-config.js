@@ -9,14 +9,20 @@ async function loadFirebaseConfig() {
         
         // For production deployment, use static config
         // Check for all production domains including caly.club
-        const isProduction = window.location.hostname.includes('calybase.web.app') || 
+        // Fallback: any non-localhost domain is considered production
+        const isLocalhost = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.hostname.startsWith('192.168.');
+        
+        const isProduction = !isLocalhost || // Any non-localhost is production
+                            window.location.hostname.includes('calybase.web.app') || 
                             window.location.hostname.includes('calybase.firebaseapp.com') ||
                             window.location.hostname.includes('vercel.app') || // Covers all Vercel deployments
                             window.location.hostname.includes('caly.club') || // New custom domain
                             window.location.hostname === 'caly.club' ||
                             window.location.hostname === 'www.caly.club';
         
-        console.log('🔍 Is Production?', isProduction);
+        console.log('🔍 Is Production?', isProduction, '(Localhost?', isLocalhost, ')');
         
         if (isProduction) {
             console.log('✅ Using production Firebase configuration');
